@@ -1,29 +1,34 @@
 #include "main.h"
 
+//External function declarations
+void update_gui();    
+
+//Local function declarations
 bool water_near(MAP * map, int x, int y, int range);
 bool cave_near(MAP * map, int x, int y, int range);
 bool mountain_near(MAP * map, int x, int y, int range);
 
-void update_gui();    
+void add_rivers(MAP * map);
+void add_river(MAP * map, int start_x, int start_y);
+COORDS * find_mountain(MAP * map, int x, int y);
 
-MAP * new_map()
+//Initialize a new map in memory.
+MAP * new_map(int width, int height)
 {
     MAP * map;
     int x = 0;
     int y = 0;    
 
-
     map = (MAP *)malloc(sizeof (*map));
 
-    map->x = 0;
-    map->y = 0;    
-                
-    for (x = 0; x < MAP_WIDTH; x++)            
+    for (x = 0; x < width; x++)            
     {
-        for (y = 0; y < MAP_HEIGHT; y++)        
+        for (y = 0; y < height; y++)        
         {
             map->tiles[x][y] = 0;
             map->elevation[x][y] = 0;
+            map->tcolor[x][y] = 0;
+            map->tsymbols[x][y] = "";
         }
 
     }
@@ -213,8 +218,11 @@ void print_map(WINDOW * win, ACTOR * ch)
     int y = 0;       
     char symbol[100];    
 
-    int start_x = ch->x - (SCREEN_W / 2) + 1;
-    int start_y = ch->y - (SCREEN_H / 2) + 1;
+    int start_x = ch->coords->x - (SCREEN_W / 2) + 1;
+    int start_y = ch->coords->y - (SCREEN_H / 2) + 1;
+
+    if (start_x < 0 || start_y < 0)
+        return;
 
     int cur_x = 0;
     int cur_y = 0;        
@@ -229,27 +237,31 @@ void print_map(WINDOW * win, ACTOR * ch)
             if (cur_x >= MAP_WIDTH)
                 continue;    
             if (cur_y >= MAP_HEIGHT)
-                continue;                
-
+                continue;                            
                                            
             sprintf(symbol, "%s", map->tsymbols[cur_x][cur_y]);
 
-            if (game->hour > 19 || game->hour < 6)
-            {
-                if (in_view(ch, cur_x, cur_y))
+            if (y < SCREEN_H / 2 && ch->coords->y < SCREEN_H / 2)                                           
+                mvwprintw(win, y, x, " ");                                                
+            else
+            {                 
+                if (game->hour > 19 || game->hour < 6)
+                {
+                    if (in_view(ch, cur_x, cur_y))
+                    {
+                        CLR_ON(win, COLOR_PAIR(map->tcolor[cur_x][cur_y])); 
+                        mvwprintw(win, y, x, "%s", symbol);                    
+                        CLR_OFF(win, COLOR_PAIR(map->tcolor[cur_x][cur_y]));                    
+                    }
+                    else                                                        
+                        mvwprintw(win, y, x, " ");             
+                }
+                else                
                 {
                     CLR_ON(win, COLOR_PAIR(map->tcolor[cur_x][cur_y])); 
-                    mvwprintw(win, y, x, "%s", symbol);                    
+                    mvwprintw(win, y, x, "%s", symbol);                                    
                     CLR_OFF(win, COLOR_PAIR(map->tcolor[cur_x][cur_y]));                    
                 }
-                else                                                        
-                    mvwprintw(win, y, x, " ");             
-            }
-            else                
-            {
-                CLR_ON(win, COLOR_PAIR(map->tcolor[cur_x][cur_y])); 
-                mvwprintw(win, y, x, "%s", symbol);                                    
-                CLR_OFF(win, COLOR_PAIR(map->tcolor[cur_x][cur_y]));                    
             }
 
             if (x % SCREEN_W == 0)
@@ -268,6 +280,273 @@ void print_player(WINDOW * win, ACTOR * ch)
     CLR_OFF(win, COLOR_PAIR(CLR_PLAYER));
         
 }
+
+
+
+//Find out if there's a cave adjacent to the given X,Y coords.
+bool cave_adjacent(MAP *map, int x, int y)
+{
+    int i = 0;
+    int j = 0;
+
+    for (i = x-1; i < x+2; i++)
+    {    
+        for (j = x-1; j < x+2; j++)
+        {
+            if (i < 0 || j < 0)
+                continue;
+
+            if (map->tiles[i][j] == TILE_CAVE)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//Find out if there's land adjacent to the given X,Y coords.
+bool land_adjacent(MAP * map, int x, int y)
+{
+    int i = 0;
+    int j = 0;
+
+    for (i = -1; i < 2; i++)
+    {    
+        for (j = -1; j < 2; j++)
+        {
+            if (map->tiles[i][j] != TILE_WATER && map->tiles[i][j] != TILE_SHALLOWS)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//Find out if there's a mountain adjacent to the given X,Y coords.
+bool mountain_near(MAP * map, int x, int y, int range)
+{
+     int i = 0;
+    int j = 0;
+    
+    if (range < 1 || range > 20)
+        return false;
+
+    for (i = 0; i < MAP_WIDTH; i++)
+    {    
+        for (j = 0; j < MAP_HEIGHT; j++)
+        {
+            //don't count this tile
+            if (x == i && y == j)
+                continue;
+
+
+            if (map->tiles[i][j] == TILE_MOUNTAIN)
+            {
+                
+                if (x - i > range || y - j > range)
+                    return true;                
+            }
+        }
+    }
+
+    return false;
+}
+
+//Find out if there's water adjacent to the given X,Y coords.
+bool water_adjacent(MAP * map, int x, int y)
+{
+    int i = 0;
+    int j = 0;
+
+    for (i = x -1; i <  x + 2; i++)
+    {    
+        for (j = y - 1; j < y + 2; j++)
+        {
+            if (i < 0 || j < 0)
+                continue;
+
+            if (map->tiles[i][j] == TILE_WATER)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+
+
+
+//Find out if there's a cave near to the given X,Y coords and range
+bool cave_near(MAP * map, int x, int y, int range)
+{
+    int i = 0;
+    int j = 0;
+    
+    if (range < 1 || range > 20)
+        return false;
+
+    for (i = 0; i < MAP_WIDTH; i++)
+    {    
+        for (j = 0; j < MAP_HEIGHT; j++)
+        {
+            //don't count this tile
+            if (x == i && y == j)
+                continue;
+
+
+            if (map->tiles[i][j] == TILE_CAVE)
+            {
+                
+                if (x - i > range || y - j > range)
+                    return true;
+
+                /*int dx = x - i;
+                int dy = y - j;  
+
+                if (dx * dx + dy * dy <= range * range) 
+                    return true;*/
+            }
+        }
+    }
+
+    return false;
+}
+
+//Find out if there's water near to the given X,Y coords and range
+bool water_near(MAP * map, int x, int y, int range)
+{
+    int i = 0;
+    int j = 0;
+    
+    if (range < 1 || range > 10)
+        return false;
+
+    for (i = x-(range); i < x + range; i++)
+    {    
+        for (j = y-(range); j < y + range; j++)
+        {
+            if (i < 0 || j < 0)
+                continue;
+
+            if (map->tiles[i][j] == TILE_WATER || map->tiles[i][j] == TILE_SHALLOWS)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+
+
+//Find current view range of player based on time, elevation, and items
+int get_view_range(ACTOR * ch)
+{
+    int range = 0;
+
+    switch (game->hour)
+    {                  
+        case 20 ... 23:
+        case 0 ... 4:
+            range = VIEW_RANGE;
+        case 6:
+        case 19:
+            range = VIEW_RANGE + 1;
+        case 5:
+        case 18:
+        default:  
+            range = VIEW_RANGE + 2;
+    }
+
+    if (game->hour > 5 && game->hour < 20)
+    {         
+        //High
+        if (map->elevation[ch->coords->x][ch->coords->y] > 50)
+            range++;
+
+        if (map->elevation[ch->coords->x][ch->coords->y] > 60)
+            range++;
+        
+        //Low
+        if (map->elevation[ch->coords->x][ch->coords->y] < 50)
+            range--;
+
+        if (map->elevation[ch->coords->x][ch->coords->y] < 45)
+            range--;
+    }
+        
+    if (ch->items[ITEM_LANTERN])    
+        range *= 1.5;
+
+    return range;
+}
+
+//Determine if a tile is in view of the player
+bool in_view(ACTOR * ch, int x, int y)
+{    
+    int dx = x - ch->coords->x;
+    int dy = y - ch->coords->y;            
+
+    if (dx * dx + dy * dy <= get_view_range(ch) * get_view_range(ch))                     
+        return true;
+       
+    
+    return false;
+}
+
+//Find highest point of elevation on the map
+double get_map_elevation(MAP * map, bool highest)
+{
+    int x = 0;
+    int y = 0;
+    double elevation = 0.0;
+    double high_elevation = 0.0;
+
+    for (x = 0; x < MAP_WIDTH; x++)
+    {
+        for (y = 0; y < MAP_HEIGHT; y++)
+        {
+            elevation = map->elevation[x][y];
+
+            if (elevation > high_elevation)
+                high_elevation = elevation;
+        }
+    }
+
+    return high_elevation;
+}
+
+COORDS * find_mountain(MAP * map, int x, int y)
+{
+    COORDS * coords = malloc(sizeof(COORDS));
+    int i = 0;
+    int j = 0;
+
+
+
+    coords->x = -1;
+    coords->y = -1;
+    coords->z = -1;
+
+    for (i = x; i < MAP_WIDTH; i++)
+    {
+        for (j = y; j < MAP_HEIGHT; j++)
+        {
+            if (map->tiles[i][j] == TILE_MOUNTAIN)
+            {
+                coords->x = i;
+                coords->y = j;
+                coords->z = 0;
+                return coords;
+            }
+        }
+    }
+
+    coords->x = -1;
+    coords->y = -1;
+    coords->z = -1;
+    return coords;
+}
+
 
 void add_caves(MAP * map)
 {
@@ -304,226 +583,82 @@ void add_caves(MAP * map)
     }
 }
 
-bool cave_adjacent(MAP *map, int x, int y)
+void add_rivers(MAP * map)
 {
     int i = 0;
-    int j = 0;
+    COORDS * coords = malloc(sizeof(COORDS));
 
-    for (i = x-1; i < x+2; i++)
-    {    
-        for (j = x-1; j < x+2; j++)
-        {
-            if (i < 0 || j < 0)
-                continue;
 
-            if (map->tiles[i][j] == TILE_CAVE)
-                return true;
-        }
-    }
 
-    return false;
+    if (!map)
+        return;
+
+    coords = find_mountain(map, rnd_num(0,MAP_WIDTH), rnd_num(0,MAP_HEIGHT));
+
+    if (coords->x == -1 && coords->y == -1)
+        return;
+
+    for (i = 0; i < MAX_RIVERS; i++)    
+        add_river(map, coords->x, coords->y);
 }
 
-bool water_adjacent(MAP * map, int x, int y)
+
+//Add a river based on start_x and start_y + declining elevation
+void add_river(MAP * map, int start_x, int start_y)
 {
-    int i = 0;
-    int j = 0;
-
-    for (i = x -1; i <  x + 2; i++)
-    {    
-        for (j = y - 1; j < y + 2; j++)
-        {
-            if (i < 0 || j < 0)
-                continue;
-
-            if (map->tiles[i][j] == TILE_WATER)
-                return true;
-        }
-    }
-
-    return false;
-}
-
-bool mountain_near(MAP * map, int x, int y, int range)
-{
-     int i = 0;
-    int j = 0;
-    
-    if (range < 1 || range > 20)
-        return false;
-
-    for (i = 0; i < MAP_WIDTH; i++)
-    {    
-        for (j = 0; j < MAP_HEIGHT; j++)
-        {
-            //don't count this tile
-            if (x == i && y == j)
-                continue;
-
-
-            if (map->tiles[i][j] == TILE_MOUNTAIN)
-            {
-                
-                if (x - i > range || y - j > range)
-                    return true;                
-            }
-        }
-    }
-
-    return false;
-}
-
-bool cave_near(MAP * map, int x, int y, int range)
-{
-    int i = 0;
-    int j = 0;
-    
-    if (range < 1 || range > 20)
-        return false;
-
-    for (i = 0; i < MAP_WIDTH; i++)
-    {    
-        for (j = 0; j < MAP_HEIGHT; j++)
-        {
-            //don't count this tile
-            if (x == i && y == j)
-                continue;
-
-
-            if (map->tiles[i][j] == TILE_CAVE)
-            {
-                
-                if (x - i > range || y - j > range)
-                    return true;
-
-                /*int dx = x - i;
-                int dy = y - j;  
-
-                if (dx * dx + dy * dy <= range * range) 
-                    return true;*/
-            }
-        }
-    }
-
-    return false;
-}
-
-bool water_near(MAP * map, int x, int y, int range)
-{
-    int i = 0;
-    int j = 0;
-    
-    if (range < 1 || range > 10)
-        return false;
-
-    for (i = x-(range); i < x + range; i++)
-    {    
-        for (j = y-(range); j < y + range; j++)
-        {
-            if (i < 0 || j < 0)
-                continue;
-
-            if (map->tiles[i][j] == TILE_WATER || map->tiles[i][j] == TILE_SHALLOWS)
-                return true;
-        }
-    }
-
-    return false;
-}
-
-bool land_adjacent(MAP * map, int x, int y)
-{
-    int i = 0;
-    int j = 0;
-
-    for (i = -1; i < 2; i++)
-    {    
-        for (j = -1; j < 2; j++)
-        {
-            if (map->tiles[i][j] != TILE_WATER && map->tiles[i][j] != TILE_SHALLOWS)
-                return true;
-        }
-    }
-
-    return false;
-}
-
-int get_view_range(ACTOR * ch)
-{
-    int range = 0;
-
-    switch (game->hour)
-    {                  
-        case 20 ... 23:
-        case 0 ... 4:
-            range = VIEW_RANGE;
-        case 6:
-        case 19:
-            range = VIEW_RANGE + 1;
-        case 5:
-        case 18:
-        default:  
-            range = VIEW_RANGE + 2;
-    }
-
-    if (game->hour > 5 && game->hour < 20)
-    {         
-        //High
-        if (map->elevation[ch->x][ch->y] > 50)
-            range++;
-
-        if (map->elevation[ch->x][ch->y] > 60)
-            range++;
-        
-        //Low
-        if (map->elevation[ch->x][ch->y] < 50)
-            range--;
-
-        if (map->elevation[ch->x][ch->y] < 45)
-            range--;
-    }
-        
-    if (ch->items[ITEM_LANTERN])    
-        range *= 1.5;
-
-    return range;
-}
-
-bool in_view(ACTOR * ch, int x, int y)
-{    
-    int dx = x - ch->x;
-    int dy = y - ch->y;            
-
-    if (dx * dx + dy * dy <= get_view_range(ch) * get_view_range(ch))                     
-        return true;
-       
-    
-    return false;
-}
-
-
-double get_map_elevation(MAP * map, bool highest)
-{
+    int river_len = rnd_num(10,20);    
+    double cur_low_elev = 1.00;
     int x = 0;
-    int y = 0;
-    double elevation = 0.0;
-    double high_elevation = 0.0;
+    int y = 0;    
+    int prev_x = 0;
+    int prev_y = 0;
+    int next_x = 0;
+    int next_y = 0;
+    int tile_count = 0;    
 
-    for (x = 0; x < MAP_WIDTH; x++)
-    {
-        for (y = 0; y < MAP_HEIGHT; y++)
+    if (!map)
+        return;
+
+    if (start_x < 10 || start_y < 10 || start_x >= MAP_WIDTH || start_y >= MAP_HEIGHT)
+        return;
+
+    while (tile_count < river_len)
+    {    
+        next_x = 0;
+        next_y = 0;
+        
+        for (x = start_x - 1; x < MAP_WIDTH && x <= start_x + 1; x++)
         {
-            elevation = map->elevation[x][y];
+            for (y = start_y - 1; y < MAP_HEIGHT && y <= start_y + 1; y++)
+            {
+                if (x < 0)
+                    x = 0;
+                if (y < 0)
+                    y = 0;
 
-            if (elevation > high_elevation)
-                high_elevation = elevation;
+                if (map->elevation[x][y] / 10 < cur_low_elev)
+                {            
+                    cur_low_elev = map->elevation[x][y];                
+                    next_x = x;
+                    next_y = y;                    
+                }
+                
+            }
         }
+
+        if ((next_x == prev_x && next_y == prev_y) || next_x >= MAP_WIDTH || next_y >= MAP_HEIGHT || next_x < 0 || next_y < 0)
+            continue;
+
+        map->tiles[next_x][next_y] = TILE_WATER;
+        map->tcolor[next_x][next_y] = rnd_num(1,100) < 50 ? CLR_WATER : CLR_WATER2;
+        map->tsymbols[next_x][next_y] = rnd_num(1,100) < 50 ? tile_table[map->tiles[next_x][next_y]].symbol : tile_table[map->tiles[next_x][next_y]].symbol2;
+        start_x = next_x;
+        start_y = next_y;
+        prev_x = next_x;
+        prev_y = next_y;
+        tile_count++;
+        
+
+        
     }
-
-    return high_elevation;
-}
-
-void add_river(int start_x, int start_y)
-{
-
 }

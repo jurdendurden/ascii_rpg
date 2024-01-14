@@ -18,8 +18,10 @@ ACTOR * new_actor(void)
 {
     int i = 0;
     ACTOR * ch;
+    COORDS * coords;
 
     ch = (ACTOR *)malloc(sizeof (*ch));
+    coords = (COORDS *)malloc(sizeof (coords));
 
     ch->max_hp = 20;
     ch->perm_hp = 20;
@@ -28,6 +30,13 @@ ACTOR * new_actor(void)
 
     for (i = 0; i < MAX_STATS; i++)    
         ch->stats[i] = rnd_num(5,10);
+    
+    
+    coords->x = 0;
+    coords->y = 0;
+    coords->z = 0;
+
+    ch->coords = coords;
     
 
     return ch;
@@ -69,7 +78,7 @@ void stats(WINDOW * win, ACTOR * ch)
         ch->stats[STAT_VIT], ch->stats[STAT_LUCK]);
 
     mvwprintw(statuswin, 3, 2, "X: %-4d   Y: %-4d   Time: %-2d:%s%1d   Date: %d/%d", 
-        ch->x, ch->y, game->hour, game->minute < 10 ? "0" : "", game->minute, game->month, game->year);
+        ch->coords->x, ch->coords->y, game->hour, game->minute < 10 ? "0" : "", game->minute, game->month, game->year);
 
     
 }
@@ -101,16 +110,16 @@ void move_char(ACTOR * ch, int x, int y)
     if (!ch)
         return;
 
-    ch->x += x;
-    ch->y += y;
+    ch->coords->x += x;
+    ch->coords->y += y;
 
-    if (!ch->explored[ch->x][ch->y])
+    if (!ch->explored[ch->coords->x][ch->coords->y])
     {
-        ch->explored[ch->x][ch->y] = true;
+        ch->explored[ch->coords->x][ch->coords->y] = true;
         add_exp(ch, 5);                                                         
     }          
     
-    update_time(tile_table[map->tiles[ch->x][ch->y]].minutes);
+    update_time(tile_table[map->tiles[ch->coords->x][ch->coords->y]].minutes);
 
     return;
 }

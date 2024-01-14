@@ -119,7 +119,7 @@
 #define VIEW_RANGE              5
 
 #define MAX_CAVES               100
-#define MAX_RIVERS              20
+#define MAX_RIVERS              50
 #define MAX_RIVER_LEN           50
 
 
@@ -150,6 +150,7 @@
 #define GAME_EXIT               0
 #define GAME_PLAYING            1
 #define GAME_PAUSED             2
+#define GAME_COMBAT             3
 
 
 //Game defines
@@ -173,6 +174,8 @@ extern const struct tile_info           tile_table[MAX_TILE];
 
 
 //Structs
+typedef struct coords                   COORDS;
+
 typedef struct item_info                ITEM;
 typedef struct map_info                 MAP;
 typedef struct actor_info               ACTOR;
@@ -180,24 +183,31 @@ typedef struct stat_info                STATS;
 typedef struct game_info                GAME;
 
 
+struct coords
+{
+    int         x;
+    int         y;
+    int         z;
+};
+
+
 struct item_info
 {
     ITEM *              next;
     char *              keywords;
     char *              name;
-    char *              description;
+    char *              description;    
+    COORDS *            coords;
     short               stats[]; 
 };
 
 struct map_info
-{      
-    short           x;          //for mult maps
-    short           y;          //for mult maps 
-    
+{          
+    int             z;                                      //is it underground?
     int             tiles[MAP_WIDTH][MAP_HEIGHT];           //which tile on tile_table
     double          elevation[MAP_WIDTH][MAP_HEIGHT];           //for perlin generator
     char *          tsymbols[MAP_WIDTH][MAP_HEIGHT];        //map symbols
-    int             tcolor[MAP_WIDTH][MAP_HEIGHT];          //color (for alternating colors that don't change every step
+    int             tcolor[MAP_WIDTH][MAP_HEIGHT];          //color (for alternating colors that don't change every step)
 };
 
 
@@ -205,10 +215,8 @@ struct actor_info
 {
     char *          name;
 
-    short           x;
-    short           y;
-    short           z;
-
+    COORDS *        coords;
+    MAP *           map;
     
     int             state;          //what state is the player in, overland, in_town, in_combat, etc
 

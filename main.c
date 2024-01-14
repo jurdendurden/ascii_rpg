@@ -8,7 +8,7 @@ GAME * new_game();
 void fix_map(MAP * map);
 void set_map(MAP * map);
 void move_char(ACTOR * ch, int x, int y);
-
+void add_rivers(MAP * map);
 
 //locals
 int get_tile(double value, int x, int y);
@@ -30,12 +30,12 @@ GAME * game;
 WINDOW * statuswin;
 WINDOW * mapwin;
 WINDOW * diagwin;
+WINDOW * combatwin;
 
 int screen_y;
 int screen_x;
 
 int SEED;
-
 
 int main(int argc, char* argv[])
 {    
@@ -57,13 +57,16 @@ int main(int argc, char* argv[])
         SEED = rand() % 256;
 
     ch = new_actor();
-    map = new_map();      
+    map = new_map(MAP_WIDTH, MAP_HEIGHT);      
     game = new_game();  
+
+    ch->map = map;
 
     generate_perlin_noise_map(map);    
     
     set_map(map);
     add_caves(map);
+    add_rivers(map);
     //fix_map(map);
 
     //ncurses screen init
@@ -81,17 +84,19 @@ int main(int argc, char* argv[])
     statuswin = newwin(6, SCREEN_W / 2, screen_y - 6, 2);
     diagwin = newwin(6, SCREEN_W / 2, screen_y - 6, SCREEN_W / 2 + 2);
     mapwin = newwin(SCREEN_H, SCREEN_W, 2, 2);
-        
+    combatwin = newwin(8,screen_y - SCREEN_H, screen_y - 6, SCREEN_W);
+
     box(statuswin, 0, 0);    
     box(diagwin, 0, 0);
+    box(combatwin, 0, 0);
     
-    ch->x = rnd_num(0, MAP_WIDTH - 1);
-    ch->y = rnd_num(0, MAP_HEIGHT - 1);                
+    ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
+    ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);                
 
-    while (!WALKABLE(ch->x, ch->y))
+    while (!WALKABLE(ch->coords->x, ch->coords->y))
     {
-        ch->x = rnd_num(0, MAP_WIDTH - 1);
-        ch->y = rnd_num(0, MAP_HEIGHT - 1);
+        ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
+        ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
     }
 
     game->state = GAME_PLAYING;
@@ -103,139 +108,156 @@ int main(int argc, char* argv[])
     //take input from user. keypad allows KEY_UP/etc macros    
     keypad(mapwin, true);
 
-    while (game->state == GAME_PLAYING)
+    while (game->state != GAME_EXIT)
     {   
-        int c = wgetch(mapwin);        
-
-
-        switch (c)
+        int c = wgetch(mapwin);
+        
+        switch (game->state)
         {
             default:
                 break;
-            //Movement
-            case KEY_UP:                      
-                if (ch->y / 16 > SCREEN_H / 2)
+
+            case GAME_COMBAT:
+            {
+
+            }
+
+            case GAME_PLAYING:
+            {
+                switch (c)
                 {
-                    if (tile_table[map->tiles[ch->x][ch->y - 1]].walkable || (IS_SHALLOWS(ch->x, ch->y - 1) && ch->items[ITEM_BOAT]))
-                        move_char(ch,0,-1);
-                }
-                update_gui();
-                break;
-            case KEY_DOWN:                          
-                if (ch->y < MAP_HEIGHT - 1)
-                {
-                    if (tile_table[map->tiles[ch->x][ch->y + 1]].walkable || (IS_SHALLOWS(ch->x, ch->y + 1) && ch->items[ITEM_BOAT]))
-                        move_char(ch,0,1);
-                }    
-                update_gui();                
-                break;            
-            case KEY_LEFT:                
-                if (ch->x > 0)
-                {
-                    if (tile_table[map->tiles[ch->x - 1][ch->y]].walkable || (IS_SHALLOWS(ch->x - 1, ch->y) && ch->items[ITEM_BOAT]))                    
-                        move_char(ch,-1,0);
-                }  
-                update_gui();                              
-                break;                
-            case KEY_RIGHT:                
-                if (ch->x < MAP_WIDTH - 1)
-                {
-                    if (tile_table[map->tiles[ch->x + 1][ch->y]].walkable || (IS_SHALLOWS(ch->x + 1, ch->y) && ch->items[ITEM_BOAT]))                    
-                        move_char(ch,1,0);                              
-                }                    
-                update_gui();
-                break;
-            //Interaction              
-            case 'd':
-            case 'D':                 
+                    default:
+                        break;
+                    //Movement
+                    case KEY_UP:                      
+                        if (ch->coords->y  > 0)
+                        {
+                            if (tile_table[map->tiles[ch->coords->x][ch->coords->y - 1]].walkable || (IS_SHALLOWS(ch->coords->x, ch->coords->y - 1) && ch->items[ITEM_BOAT]))
+                                move_char(ch,0,-1);
+                        }
+                        update_gui();
+                        break;
+                    case KEY_DOWN:                          
+                        if (ch->coords->y < MAP_HEIGHT - 1)
+                        {
+                            if (tile_table[map->tiles[ch->coords->x][ch->coords->y + 1]].walkable || (IS_SHALLOWS(ch->coords->x, ch->coords->y + 1) && ch->items[ITEM_BOAT]))
+                                move_char(ch,0,1);
+                        }    
+                        update_gui();                
+                        break;            
+                    case KEY_LEFT:                
+                        if (ch->coords->x > 0)
+                        {
+                            if (tile_table[map->tiles[ch->coords->x - 1][ch->coords->y]].walkable || (IS_SHALLOWS(ch->coords->x - 1, ch->coords->y) && ch->items[ITEM_BOAT]))                    
+                                move_char(ch,-1,0);
+                        }  
+                        update_gui();                              
+                        break;                
+                    case KEY_RIGHT:                
+                        if (ch->coords->x < MAP_WIDTH - 1)
+                        {
+                            if (tile_table[map->tiles[ch->coords->x + 1][ch->coords->y]].walkable || (IS_SHALLOWS(ch->coords->x + 1, ch->coords->y) && ch->items[ITEM_BOAT]))                    
+                                move_char(ch,1,0);                              
+                        }                    
+                        update_gui();
+                        break;
+                    //Interaction              
+                    case 'd':
+                    case 'D':                 
 
-                if (ch->dug_up[ch->x][ch->y])                                    
-                    sprintf(buf, "You've already dug in this area.");                                    
-                else if (ch->items[ITEM_SHOVEL])
-                {
-                    if (map->tiles[ch->x][ch->y] == TILE_WATER || map->tiles[ch->x][ch->y] == TILE_SHALLOWS)                                                                        
-                        sprintf(buf, "You can't dig in the water!");                                                                     
-                    else                
-                        sprintf(buf, "You dig around the area, but uncover nothing of importance.");                   
-                }
-                else
-                    sprintf(buf, "You need a shovel to dig with!");                                                                                                         
-                    
-                mvwprintw(statuswin, 1, 2, "%s", buf);                
+                        if (ch->dug_up[ch->coords->x][ch->coords->y])                                    
+                            sprintf(buf, "You've already dug in this area.");                                    
+                        else if (ch->items[ITEM_SHOVEL])
+                        {
+                            if (map->tiles[ch->coords->x][ch->coords->y] == TILE_WATER || map->tiles[ch->coords->x][ch->coords->y] == TILE_SHALLOWS)                                                                        
+                                sprintf(buf, "You can't dig in the water!");                                                                     
+                            else                
+                                sprintf(buf, "You dig around the area, but uncover nothing of importance.");                   
+                        }
+                        else
+                            sprintf(buf, "You need a shovel to dig with!");                                                                                                         
+                            
+                        mvwprintw(statuswin, 1, 2, "%s", buf);                
 
-                if (ch->items[ITEM_SHOVEL])
-                    ch->dug_up[ch->x][ch->y] = true;    
+                        if (ch->items[ITEM_SHOVEL])
+                            ch->dug_up[ch->coords->x][ch->coords->y] = true;    
 
-                update_gui();
-                break;
-            case 'f':
-            case 'F':                
+                        update_gui();
+                        break;
+                    case 'f':
+                    case 'F':                
 
-                if (ch->items[ITEM_FISHING_POLE])
-                {                    
-                    if (map->tiles[ch->x][ch->y] != TILE_WATER && map->tiles[ch->x][ch->y] != TILE_SHALLOWS)                                                                        
-                        sprintf(buf, "You can't fish on land!");                                                                                             
-                    else                
-                        sprintf(buf, "You cast your fishing pole in the water.");                   
-                }
-                else                                        
-                    sprintf(buf, "You need a fishing pole first!");       
-                
-                
-                mvwprintw(statuswin, 1, 2, "%s", buf);
-                update_gui();
-                break;           
-
-            case 'q': 
-            case 'Q':
-                game->state = GAME_EXIT;
-                break;
-
-            case 's':
-            case 'S':                 
-                if (ch->searched[ch->x][ch->y])                                                    
-                    sprintf(buf, "You've already searched this area.");                                                                         
-                else if (rnd_num(1,100) < 5 && !ch->items[ITEM_SHOVEL])
-                {                                    
-                    sprintf(buf, "You found a shovel! How fortuitous!");                       
-                    ch->items[ITEM_SHOVEL] = true;                    
-                    add_exp(ch, 100);                                          
-                }
-                else if (rnd_num(1,100) < 5 && !ch->items[ITEM_LANTERN] && IS_SHORELINE(ch->x, ch->y))
-                {                    
-                    sprintf(buf, "You found a lantern! It must have washed ashore from a shipwreck.");   
-                    ch->items[ITEM_LANTERN] = true;
-                    add_exp(ch, 250);                             
-                }
-                else                                       
-                    sprintf(buf, "You search the area, but find nothing.");                                           
-                
-                ch->searched[ch->x][ch->y] = true;                                
-                mvwprintw(statuswin, 1, 2, "%s", buf);
-                update_gui();   
-                break;
-            case 't':
-            case 'T':
-                ch->x = rnd_num(0, MAP_WIDTH - 1);
-                ch->y = rnd_num(0, MAP_HEIGHT - 1);
-
-                while (!WALKABLE(ch->x, ch->y))
-                {
-                    ch->x = rnd_num(0, MAP_WIDTH - 1);
-                    ch->y = rnd_num(0, MAP_HEIGHT - 1);
-                }
-                update_gui();
-
-                break;
-            //F Keys:
-            case KEY_F(1):
-                game->hour++;      
-                update_gui();                    
-                break;
+                        if (ch->items[ITEM_FISHING_POLE])
+                        {                    
+                            if (map->tiles[ch->coords->x][ch->coords->y] != TILE_WATER && map->tiles[ch->coords->x][ch->coords->y] != TILE_SHALLOWS)                                                                        
+                                sprintf(buf, "You can't fish on land!");                                                                                             
+                            else                
+                                sprintf(buf, "You cast your fishing pole in the water.");                   
+                        }
+                        else                                        
+                            sprintf(buf, "You need a fishing pole first!");       
                         
-        } 
-        mvwprintw(statuswin, 1, 2, "                              ");
-        mvwprintw(diagwin, 4, 2, "                              ");   
+                        
+                        mvwprintw(statuswin, 1, 2, "%s", buf);
+                        update_gui();
+                        break;           
+
+                    case 'q': 
+                    case 'Q':
+                        game->state = GAME_EXIT;
+                        break;
+
+                    case 's':
+                    case 'S':                 
+                        if (ch->searched[ch->coords->x][ch->coords->y])                                                    
+                            sprintf(buf, "You've already searched this area.");                                                                         
+                        else if (rnd_num(1,100) < 5 && !ch->items[ITEM_SHOVEL])
+                        {                                    
+                            sprintf(buf, "You found a shovel! How fortuitous!");                       
+                            ch->items[ITEM_SHOVEL] = true;                    
+                            add_exp(ch, 100);                                          
+                        }
+                        else if (rnd_num(1,100) < 5 && !ch->items[ITEM_LANTERN] && IS_SHORELINE(ch->coords->x, ch->coords->y))
+                        {                    
+                            sprintf(buf, "You found a lantern! It must have washed ashore from a shipwreck.");   
+                            ch->items[ITEM_LANTERN] = true;
+                            add_exp(ch, 250);                             
+                        }
+                        else                                       
+                            sprintf(buf, "You search the area, but find nothing.");                                           
+                        
+                        ch->searched[ch->coords->x][ch->coords->y] = true;                                
+                        mvwprintw(statuswin, 1, 2, "%s", buf);
+                        update_gui();   
+                        break;
+                    case 't':
+                    case 'T':
+                        ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
+                        ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
+
+                        while (!WALKABLE(ch->coords->x, ch->coords->y))
+                        {
+                            ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
+                            ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
+                        }
+                        update_gui();
+
+                        break;
+                    //F Keys:
+                    case KEY_F(1):
+                        game->hour++;      
+                        update_gui();                    
+                        break;
+                                
+                } 
+                mvwprintw(statuswin, 1, 2, "                              ");
+                mvwprintw(diagwin, 4, 2, "                              ");   
+            }
+        }
+                
+
+
+        
 
     }              
 
@@ -307,5 +329,5 @@ void diagnostics()
         SEED, COLORS, (float)(sizeof(*map)) / 1024 / 1024);
     
     mvwprintw(diagwin, 4, 2, "Viewport: %d   Elev: %lf   Tile: %s", 
-        get_view_range(ch), map->elevation[ch->x][ch->y], TILE_NAME(ch->x, ch->y));
+        get_view_range(ch), map->elevation[ch->coords->x][ch->coords->y], TILE_NAME(ch->coords->x, ch->coords->y));
 }

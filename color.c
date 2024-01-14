@@ -1,9 +1,14 @@
 #include "main.h"
 
-void init_extra_colors();
+
 
 void declare_colors(void)
 {
+  //Individual colors
+  init_color(COLOR_BWHITE, 1000,1000,1000); //bright white (15)
+
+
+  //Color pairs (for displaying tiles/player/mobiles/etc)
   init_pair(1, COLOR_GREEN, 47);  // field
   init_pair(2, COLOR_BLACK, 47);  // forest
   init_pair(3, COLOR_BLACK, 59);  // mountain
@@ -31,7 +36,7 @@ void declare_colors(void)
   init_pair(59, COLOR_BLUE, COLOR_CYAN);   // shallows2
   init_pair(60, COLOR_BLUE, COLOR_CYAN);    // jungle
   init_pair(61, COLOR_CYAN, 32);  //deep water
-  //
+  //Cave2 - don't use but also don't need
   init_pair(63, 130, COLOR_GREEN);   //woods
   init_pair(64, COLOR_WHITE, COLOR_BLACK);   //snow mountain 2
   init_pair(65, COLOR_BLACK, 15);   //tundra2
@@ -41,33 +46,12 @@ void declare_colors(void)
   init_pair(121, COLOR_WHITE, COLOR_BLUE); //water
   init_pair(122, COLOR_WHITE, 32); //deep water
 
+
+  //What are these again?
   init_pair(69, 50, COLOR_CYAN);
   init_pair(70, 50, COLOR_CYAN);
 
-  init_color(COLOR_BWHITE, 1000,1000,1000); //bright white
   
-
-
   init_pair(CLR_ENEMY,  COLOR_RED, COLOR_BLACK); // player
-  init_pair(CLR_PLAYER, COLOR_WHITE, -1); // player
-
-  //init_extra_colors();
-
-  
+  init_pair(CLR_PLAYER, COLOR_WHITE, -1); // player    
 }
-
-/*void init_extra_colors()
-{
-  if (has_colors() && COLORS == 256 && can_change_color())
-  {
-
-    int r = rnd_num(0,255);
-    int g = rnd_num(0,255);
-    int b = rnd_num(0,255);
-
-    int count = 0;
-
-    for (count = 20; count < 256; count++)
-        init_color(count, r, g, b);
-  }
-}*/
