@@ -10,6 +10,9 @@ void set_map(MAP * map);
 void move_char(ACTOR * ch, int x, int y);
 void add_rivers(MAP * map);
 
+void set_monster(ACTOR * mob, ACTOR * ch, int level);
+void free_mobs();
+
 //locals
 int get_tile(double value, int x, int y);
 
@@ -27,9 +30,12 @@ void update_gui();
 MAP * map;
 ACTOR * ch;
 GAME * game;
+ACTOR * mobs[5];
 WINDOW * statuswin;
 WINDOW * mapwin;
 WINDOW * diagwin;
+WINDOW * infowin;
+WINDOW * shopwin;
 WINDOW * combatwin;
 
 int screen_y;
@@ -60,6 +66,10 @@ int main(int argc, char* argv[])
     map = new_map(MAP_WIDTH, MAP_HEIGHT);      
     game = new_game();  
 
+    for (int i = 0; i < 5; i++)        
+        mobs[i] = new_actor();
+        
+
     ch->map = map;
 
     generate_perlin_noise_map(map);    
@@ -84,12 +94,15 @@ int main(int argc, char* argv[])
     statuswin = newwin(6, SCREEN_W / 2, screen_y - 6, 2);
     diagwin = newwin(6, SCREEN_W / 2, screen_y - 6, SCREEN_W / 2 + 2);
     mapwin = newwin(SCREEN_H, SCREEN_W, 2, 2);
-    combatwin = newwin(8,screen_y - SCREEN_H, screen_y - 6, SCREEN_W);
-
+    infowin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, 2, SCREEN_W + 3);
+    combatwin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, SCREEN_H / 2 + 3, SCREEN_W + 3);
+           
+    
     box(statuswin, 0, 0);    
     box(diagwin, 0, 0);
+    box(infowin, 0, 0);
     box(combatwin, 0, 0);
-    
+
     ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
     ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);                
 
@@ -118,8 +131,39 @@ int main(int argc, char* argv[])
                 break;
 
             case GAME_COMBAT:
-            {
+            {                   
+                for (int i = 0; i < 5; i++)  
+                {
+                    if (mobs[i] != NULL)                                            
+                    {
+                        //run combat round
+                    }                    
+                }
 
+                switch (c)
+                {
+                    default:
+                        break;
+                    case 'f':
+                    case 'F':
+                        //flee from combat;
+                        mvwprintw(combatwin, 1, 2, "You flee from combat!");
+                        wrefresh(combatwin);
+                        update_gui();
+                        free_mobs();
+                        game->state = GAME_PLAYING;
+                        break;
+                    case 'a':
+                    case 'A':
+                        //melee attack
+                        break; 
+                    case 'i':
+                    case 'I':
+                        //use item;
+
+                }
+
+                break;
             }
 
             case GAME_PLAYING:
@@ -252,12 +296,14 @@ int main(int argc, char* argv[])
                 } 
                 mvwprintw(statuswin, 1, 2, "                              ");
                 mvwprintw(diagwin, 4, 2, "                              ");   
-            }
-        }
+                mvwprintw(infowin, 1, 2, "                              ");   
+                mvwprintw(infowin, 2, 2, "                              ");   
+                mvwprintw(combatwin, 1, 2, "                              ");   
                 
 
 
-        
+            }
+        }
 
     }              
 
@@ -270,18 +316,19 @@ void update_gui()
 {
     box(statuswin, 0, 0);    
     box(diagwin, 0, 0);
+    box(infowin, 0, 0);
+    box(combatwin, 0, 0);
 
     print_map(mapwin, ch);                        
     print_player(mapwin, ch);
-    
     stats(statuswin, ch);
-    
     diagnostics(); 
 
+    wrefresh(mapwin);    
     wrefresh(statuswin);   
-    wrefresh(mapwin);
     wrefresh(diagwin);
-    
+    wrefresh(infowin);
+    wrefresh(combatwin);
     return;
 }
 
@@ -325,9 +372,10 @@ void update_time(int min)
 
 void diagnostics()
 {
-    mvwprintw(diagwin, 2, 2, "Seed: %d    Colors: %d    Tile Mem: %2.2lfMB", 
-        SEED, COLORS, (float)(sizeof(*map)) / 1024 / 1024);
+    mvwprintw(diagwin, 2, 2, "Seed: %d    Colors: %d", SEED, COLORS);
     
+    mvwprintw(diagwin, 3, 2, "Tile Mem: %2.2lfMB", (float)(sizeof(*map)) / 1024 / 1024);
+
     mvwprintw(diagwin, 4, 2, "Viewport: %d   Elev: %lf   Tile: %s", 
         get_view_range(ch), map->elevation[ch->coords->x][ch->coords->y], TILE_NAME(ch->coords->x, ch->coords->y));
 }

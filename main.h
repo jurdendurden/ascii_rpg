@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <math.h>
 #include <ncurses.h>
-//#include <conio.h>
 
 //Type defines
 #if !defined byte
@@ -31,6 +30,7 @@
 #define CLR_WOODS               13
 #define CLR_SNOW_MTN            14
 #define CLR_TUNDRA              15
+#define CLR_FWOODS              16
 
 
 #define CLR_FIELD2               51
@@ -48,7 +48,7 @@
 #define CLR_WOODS2                63
 #define CLR_SNOW_MTN2             64
 #define CLR_TUNDRA2               65
-
+//Fwoods2
 
 #define CLR_ENEMY               255
 #define CLR_PLAYER              256
@@ -62,10 +62,11 @@
 #define COLOR_GOLDENROD         227
 #define COLOR_WHEAT             229
 #define COLOR_LIGHT_SALMON      216     //dusk desert bg
+#define COLOR_BROWN             130
 
 
 //Tile defines
-#define MAX_TILE                16
+#define MAX_TILE                17
 
 #define TILE_NULL               0
 #define TILE_FIELD              1
@@ -83,6 +84,7 @@
 #define TILE_WOODS              13
 #define TILE_SNOW_MTN           14
 #define TILE_TUNDRA             15
+#define TILE_FWOODS             16 //frozed woods
 
 /*#define TILE_MUSHROOM_FOREST    11
 
@@ -119,7 +121,7 @@
 #define VIEW_RANGE              5
 
 #define MAX_CAVES               100
-#define MAX_RIVERS              50
+#define MAX_RIVERS              75
 #define MAX_RIVER_LEN           50
 
 
@@ -155,22 +157,7 @@
 
 //Game defines
 #define MAX_LEVEL               50      //max level for mobiles/players
-#define MAX_MOB_MAP             50      //maximum mobiles created per map
-
-//Tables
-struct tile_info
-{
-    char *          name;
-    int             minutes;        //how many minutes to walk across
-    bool            walkable;    
-    char *          symbol; 
-    char *          symbol2; 
-    int             color;
-    int             color2;
-       
-};
-
-extern const struct tile_info           tile_table[MAX_TILE];
+#define MAX_MONSTERS            4       //maximum mobiles in monster table
 
 
 //Structs
@@ -190,6 +177,31 @@ struct coords
     int         z;
 };
 
+struct tile_info
+{
+    char *          name;
+    int             minutes;        //how many minutes to walk across
+    bool            walkable;    
+    char *          symbol; 
+    char *          symbol2; 
+    int             color;
+    int             color2;
+       
+};
+
+struct monster_info
+{
+    char *          name;
+        
+    bool            spawn_in[MAX_TILE];
+        
+    short           max_hp;
+    int             level;
+    int             min_dmg;
+    int             max_dmg;
+    int             defense;
+
+};
 
 struct item_info
 {
@@ -203,6 +215,8 @@ struct item_info
 
 struct map_info
 {          
+    int             height;
+    int             width;
     int             z;                                      //is it underground?
     int             tiles[MAP_WIDTH][MAP_HEIGHT];           //which tile on tile_table
     double          elevation[MAP_WIDTH][MAP_HEIGHT];           //for perlin generator
@@ -233,7 +247,12 @@ struct actor_info
     bool            explored[MAP_WIDTH][MAP_HEIGHT];
     bool            searched[MAP_WIDTH][MAP_HEIGHT];
     bool            dug_up[MAP_WIDTH][MAP_HEIGHT];
+
+    bool            npc;
+    
 };
+
+
 
 struct game_info
 {
@@ -248,21 +267,31 @@ struct game_info
 };
 
 
+//Tables
+extern const struct tile_info           tile_table[MAX_TILE];
+extern const struct monster_info        monster_table[];
+
+
+
 //Global variables/pointers
 
 extern MAP * map;
 extern ACTOR * ch;
 extern GAME * game;
 
+extern ACTOR * mobs[5]; //allow for groups of four mobs.
+
 extern WINDOW * statuswin;
 extern WINDOW * mapwin;
 extern WINDOW * diagwin;
+extern WINDOW * infowin;
+extern WINDOW * shopwin;
+extern WINDOW * combatwin;
 
 extern int screen_x;
 extern int screen_y;
 
 extern int SEED;
-
 
 //Global function declarations
 

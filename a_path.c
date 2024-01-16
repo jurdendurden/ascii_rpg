@@ -131,10 +131,11 @@ int *findpath(int startx, int starty, int endx, int endy)
     //current node = end; 
     //node i = 0;
     
-    /*while(currentnode != start_node)
-        { path = current_node's parent; i++;};*/
+    //while(currentnode != start_node)
+        //{ path = node[x][y] parent; i++;};//
 
 	return &path; //we're done, return a pointer to the final path;
+	
 }//end function
 
 

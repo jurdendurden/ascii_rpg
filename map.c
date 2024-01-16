@@ -1,4 +1,5 @@
 #include "main.h"
+#include <stdlib.h>
 
 //External function declarations
 void update_gui();    
@@ -21,6 +22,9 @@ MAP * new_map(int width, int height)
 
     map = (MAP *)malloc(sizeof (*map));
 
+    map->width = width;
+    map->height = height;
+
     for (x = 0; x < width; x++)            
     {
         for (y = 0; y < height; y++)        
@@ -39,7 +43,7 @@ MAP * new_map(int width, int height)
 
 int get_tile(double value, int x, int y)
 {
-    if (value > 0.75)
+    if (value > 0.73)
     {
         if (y < EQUATOR - 180 || y > EQUATOR + 180)
         {
@@ -62,14 +66,35 @@ int get_tile(double value, int x, int y)
         }
         else
         {
-            map->tiles[x][y] = TILE_FOREST;
-            map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_FOREST : CLR_FOREST2;        
+            if (y < EQUATOR - 180 || y > EQUATOR + 180)
+            {
+                map->tiles[x][y] = TILE_FWOODS;
+                map->tcolor[x][y] = CLR_FWOODS;        
+            }
+            else
+            {
+                map->tiles[x][y] = TILE_FOREST;
+                map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_FOREST : CLR_FOREST2;        
+            }
         }
     }
     else if (value > 0.54) 
     {
-        map->tiles[x][y] = TILE_FOREST;
-        map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_FOREST : CLR_FOREST2;        
+        if (y < EQUATOR - 180 || y > EQUATOR + 180)
+        {
+            map->tiles[x][y] = TILE_FWOODS;
+            map->tcolor[x][y] = CLR_FWOODS;        
+        }
+        else if (y < EQUATOR + 30 && y > EQUATOR - 30)
+        {
+            map->tiles[x][y] = TILE_WOODS;
+            map->tcolor[x][y] = CLR_WOODS; 
+        }
+        else
+        {
+            map->tiles[x][y] = TILE_FOREST;
+            map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_FOREST : CLR_FOREST2;        
+        }
     }
     /*else if (value > 0.44)
     {
@@ -385,6 +410,11 @@ bool cave_near(MAP * map, int x, int y, int range)
     if (range < 1 || range > 20)
         return false;
 
+    if (x > MAP_WIDTH - (range + 1))
+        x = MAP_WIDTH - 1;
+    if (y > MAP_HEIGHT - (range + 1))
+        y = MAP_HEIGHT - 1;
+
     for (i = 0; i < MAP_WIDTH; i++)
     {    
         for (j = 0; j < MAP_HEIGHT; j++)
@@ -549,85 +579,138 @@ COORDS * find_mountain(MAP * map, int x, int y)
 
 
 void add_caves(MAP * map)
-{
-    int x = 0;
-    int y = 0;
-    
+{   
     int caves = 0;
+    COORDS * coords = malloc(sizeof(COORDS));
 
-    for (x = 0; x < MAP_WIDTH; x++)
+    while (caves < MAX_CAVES)
     {
-        for (y = 0; y < MAP_HEIGHT; y++)
-        {
-            int chance = 2;
+        coords = find_mountain(map, rnd_num(0, MAP_WIDTH - 20), rnd_num(0, MAP_HEIGHT - 20));
 
-            if (TILE(x,y) != TILE_MOUNTAIN && TILE(x,y) != TILE_HILL && TILE(x,y) != TILE_FOREST)
-                continue;
-            
-            if (TILE(x,y) == TILE_MOUNTAIN)
-                chance += 4;
-
-            if (TILE(x,y) == TILE_HILL)
-                chance += 3;            
-            
-            if (!cave_near(map, x, y, 9))
-            {
-                if (rnd_num(1,100) < chance && caves < MAX_CAVES)
-                {
-                    caves++;
-                    map->tiles[x][y] = TILE_CAVE;
-                    map->tcolor[x][y] = CLR_CAVE;
-                }
-            } 
+        if (coords->x < 10 || coords->y < 10 || coords->x >= MAP_WIDTH || coords->y >= MAP_HEIGHT)
+            continue;
+    
+        //if (!cave_near(map, coords->x, coords->y, 9))
+        {         
+            caves++;
+            map->tiles[coords->x][coords->y] = TILE_CAVE;
+            map->tcolor[coords->x][coords->y] = CLR_CAVE;         
         } 
     }
 }
+
+
+
 
 void add_rivers(MAP * map)
 {
     int i = 0;
     COORDS * coords = malloc(sizeof(COORDS));
 
-
-
     if (!map)
         return;
 
-    coords = find_mountain(map, rnd_num(0,MAP_WIDTH), rnd_num(0,MAP_HEIGHT));
+    for (i = 0; i < MAX_RIVERS; i++)  
+    {  
+        coords = find_mountain(map, rnd_num(0,MAP_WIDTH), rnd_num(0,MAP_HEIGHT));
 
-    if (coords->x == -1 && coords->y == -1)
-        return;
-
-    for (i = 0; i < MAX_RIVERS; i++)    
-        add_river(map, coords->x, coords->y);
+        if (coords->x < 1 && coords->y < 1)
+            continue;
+        else
+            add_river(map, coords->x, coords->y);        
+    }
 }
 
 
 //Add a river based on start_x and start_y + declining elevation
 void add_river(MAP * map, int start_x, int start_y)
 {
-    int river_len = rnd_num(10,20);    
-    double cur_low_elev = 1.00;
+    int river_len = rnd_num(15, MAX_RIVER_LEN);        
     int x = 0;
     int y = 0;    
-    int prev_x = 0;
-    int prev_y = 0;
-    int next_x = 0;
-    int next_y = 0;
     int tile_count = 0;    
+    int dir = 0;    
 
     if (!map)
         return;
 
-    if (start_x < 10 || start_y < 10 || start_x >= MAP_WIDTH || start_y >= MAP_HEIGHT)
-        return;
+    x = start_x;
+    y = start_y;
+
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
 
     while (tile_count < river_len)
     {    
-        next_x = 0;
-        next_y = 0;
+        start_x = x;
+        start_y = y;
+
+        //while (!dir_found)
+        {
+            dir = rnd_num(1,4);
+
+            switch (dir) 
+            {
+                case 1:
+                    if ((x > 0) /*&& map->elevation[x-1][y] < map->elevation[x][y]*/) 
+                        x--;
+                    break;
+                case 2:
+                    if ((x < MAP_WIDTH - 1) /*&& map->elevation[x+1][y] < map->elevation[x][y]*/) 
+                        x++;
+                    break;
+                case 3:
+                    if (y > 0 /*&& map->elevation[x][y-1] < map->elevation[x][y]*/) 
+                        y--;
+                    break;
+                case 4:
+                    if ((y < MAP_HEIGHT - 1) /*&& map->elevation[x][y+1] < map->elevation[x][y]*/) 
+                        y++;
+                    break;
+                case 5: //NW
+                    if ((x > 0 && y > 0) && map->elevation[x-1][y-1] < map->elevation[x][y])  
+                    {
+                        x--;
+                        y--;                    
+                    }
+                    break;
+                case 6: //NE
+                    if ((x < MAP_WIDTH - 1 && y > 0) && map->elevation[x+1][y-1] < map->elevation[x][y]) 
+                    {
+                        x++;
+                        y--;
+                    }
+                    break;
+                case 7: //SE
+                    if ((x < MAP_WIDTH - 1 && y < MAP_HEIGHT - 1) && map->elevation[x+1][y+1] < map->elevation[x][y])  
+                    {
+                        x++;
+                        y++;
+                    }
+                    break;
+                case 8: //SW
+                    if ((x > 0 && y < MAP_HEIGHT - 1) && map->elevation[x-1][y+1] < map->elevation[x][y]) 
+                    {
+                        x--;
+                        y++;
+                    }
+                    break;
+            }
+            
+            /*if (x != start_x || y != start_y)
+                dir_found = true;            */
+        }
         
-        for (x = start_x - 1; x < MAP_WIDTH && x <= start_x + 1; x++)
+
+
+        map->tiles[x][y] = TILE_WATER;
+        map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_WATER : CLR_WATER2;
+        map->tsymbols[x][y] = rnd_num(1,100) < 50 ? tile_table[map->tiles[x][y]].symbol : tile_table[map->tiles[x][y]].symbol2;
+        tile_count++;   
+
+        /*for (x = start_x - 1; x < MAP_WIDTH && x <= start_x + 1; x++)
         {
             for (y = start_y - 1; y < MAP_HEIGHT && y <= start_y + 1; y++)
             {
@@ -636,7 +719,7 @@ void add_river(MAP * map, int start_x, int start_y)
                 if (y < 0)
                     y = 0;
 
-                if (map->elevation[x][y] / 10 < cur_low_elev)
+                if (map->elevation[x][y] / 10 < cur_low_elev && (map->tiles[x][y] != TILE_WATER && map->tiles[x][y] != TILE_SHALLOWS))
                 {            
                     cur_low_elev = map->elevation[x][y];                
                     next_x = x;
@@ -644,21 +727,11 @@ void add_river(MAP * map, int start_x, int start_y)
                 }
                 
             }
-        }
+        }*/
 
-        if ((next_x == prev_x && next_y == prev_y) || next_x >= MAP_WIDTH || next_y >= MAP_HEIGHT || next_x < 0 || next_y < 0)
-            continue;
+        /*if ((next_x == prev_x && next_y == prev_y) || next_x >= MAP_WIDTH || next_y >= MAP_HEIGHT || next_x < 0 || next_y < 0)
+            continue;*/ 
 
-        map->tiles[next_x][next_y] = TILE_WATER;
-        map->tcolor[next_x][next_y] = rnd_num(1,100) < 50 ? CLR_WATER : CLR_WATER2;
-        map->tsymbols[next_x][next_y] = rnd_num(1,100) < 50 ? tile_table[map->tiles[next_x][next_y]].symbol : tile_table[map->tiles[next_x][next_y]].symbol2;
-        start_x = next_x;
-        start_y = next_y;
-        prev_x = next_x;
-        prev_y = next_y;
-        tile_count++;
-        
-
-        
+             
     }
 }

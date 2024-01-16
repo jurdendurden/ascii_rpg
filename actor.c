@@ -3,6 +3,10 @@
 void add_exp(ACTOR * ch, int exp);
 void check_exp(ACTOR * ch);
 
+void set_monster(ACTOR * mob, ACTOR * ch, int level);
+
+void check_combat(ACTOR * ch);
+
 void update_time(int min);
 void update_gui();
 
@@ -37,48 +41,35 @@ ACTOR * new_actor(void)
     coords->z = 0;
 
     ch->coords = coords;
+    ch->npc = false;
     
 
     return ch;
 }
-
-
-
-
-
-//create a mobile of level int level, and pick it from table based on int biome
-ACTOR * create_mobile(int level, int biome)
-{
-    ACTOR * mob = NULL;
-
-    if (level < 1 || level > MAX_LEVEL)
-        return NULL;
-
-
-    return mob;
-}
-
-
-
-
 
 //Player specific
 
 //Informational
 void stats(WINDOW * win, ACTOR * ch)
 {
-    //char buf[1024];
-    //int i = 0;
+    if (!win || !ch)
+        return;
 
-    mvwprintw(statuswin, 2, 2, "HP: %d / %d   Level: %d   Exp: %d / %d", 
-        ch->curr_hp, ch->max_hp, ch->level, ch->exp, ch->level * 1000);
+    mvwprintw(win, 1, 2, "%s", ch->name);
+    mvwprintw(win, 2, 2, "HP: %d / %d   Level: %d", ch->curr_hp, ch->max_hp, ch->level);
+    
+    if (!ch->npc)
+    {
+        mvwprintw(win, 2, 2, "HP: %d / %d   Level: %d   Exp: %d / %d", 
+            ch->curr_hp, ch->max_hp, ch->level, ch->exp, ch->level * 1000);
 
-    mvwprintw(statuswin, 4, 2, "Str:  %-d  Int:  %-d  Dex:  %-d  Vit:  %-d  Luk:  %-d",
-        ch->stats[STAT_STR], ch->stats[STAT_INT], ch->stats[STAT_DEX],
-        ch->stats[STAT_VIT], ch->stats[STAT_LUCK]);
+        mvwprintw(win, 3, 2, "Str:  %-d  Int:  %-d  Dex:  %-d  Vit:  %-d  Luk:  %-d",
+            ch->stats[STAT_STR], ch->stats[STAT_INT], ch->stats[STAT_DEX],
+            ch->stats[STAT_VIT], ch->stats[STAT_LUCK]);
 
-    mvwprintw(statuswin, 3, 2, "X: %-4d   Y: %-4d   Time: %-2d:%s%1d   Date: %d/%d", 
-        ch->coords->x, ch->coords->y, game->hour, game->minute < 10 ? "0" : "", game->minute, game->month, game->year);
+        mvwprintw(win, 4, 2, "X: %-4d   Y: %-4d   Time: %-2d:%s%1d   Date: %d/%d/%d", 
+            ch->coords->x, ch->coords->y, game->hour, game->minute < 10 ? "0" : "", game->minute, game->month, game->day, game->year);
+    }
 
     
 }
@@ -120,6 +111,28 @@ void move_char(ACTOR * ch, int x, int y)
     }          
     
     update_time(tile_table[map->tiles[ch->coords->x][ch->coords->y]].minutes);
+    check_combat(ch);
 
+    return;
+}
+
+void check_combat(ACTOR * ch)
+{    
+    int chance = 0;
+
+    if (!ch)
+        return;
+
+    chance = rnd_num(1,100);
+
+    if (chance < 10)
+    {
+        set_monster(mobs[0], ch, 1);        
+
+        mvwprintw(statuswin, 1, 2, "An angry %s appears!", mobs[0]->name);
+        wrefresh(statuswin);
+        game->state = GAME_COMBAT;
+        update_gui();
+    }
     return;
 }
