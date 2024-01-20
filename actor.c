@@ -118,20 +118,27 @@ void move_char(ACTOR * ch, int x, int y)
 void check_combat(ACTOR * ch)
 {    
     int chance = 0;
+    int num_mobs = 0;
+    int i = 0;
 
     if (!ch || ch->npc)
         return;
-
+    
     chance = rnd_num(1,100);
 
-    if (chance < 10)
+    if (chance < 8)
     {
-        set_monster(mobs[0], ch, 1);        
+        num_mobs = rnd_num(1,MAX_PARTY);
+        
+        for (i = 1; i <= num_mobs; i++)
+        {
+            set_monster(mobs[i], ch, 1);        
 
-        SEND(statuswin, 1, 2, "An angry %s appears!", mobs[0]->name);
-        wrefresh(statuswin);
-        game->state = GAME_COMBAT;
-        update_gui();
+            SEND(statuswin, 1, 2, "An angry %s appears!", mobs[i]->name);
+            wrefresh(statuswin);
+            game->state = GAME_COMBAT;
+            update_gui();
+        }
     }
     return;
 }

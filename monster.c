@@ -39,11 +39,28 @@ void set_monster(ACTOR * mob, ACTOR * ch, int level)
     return;
 }
 
+
+//Free up monster "party" memory allocation for the next battle.
 void free_mobs()
 {
-    int i = 0;    
+    int i = 0;  
+    int j = 0;  
 
-    for (i = 0; i < 5; i++)
-        mobs[i] = NULL;
+    for (i = 0; i < MAX_PARTY; i++)
+    {
+        if (mobs[i])
+        {
+            mobs[i]->name = "";
+            mobs[i]->level = 0;
+            
+            for (j = 0; j < MAX_STATS; j++)            
+                mobs[i]->stats[j] = 0;
+
+            mobs[i]->coords->x = -1;            
+            mobs[i]->coords->y = -1;            
+        }
+    }
+
+    
 }
 

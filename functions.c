@@ -39,8 +39,6 @@ void cwprintf(WINDOW *win, int starty, int startx, int width, char *string)
 	refresh();
 }
 
-
-
 //Push time forward based in min parameter. 
 //Can only be moved forward at the moment.
 void update_time(int min)
@@ -78,7 +76,6 @@ void update_time(int min)
     }
     return;
 }
-
 
 //Print diagnostics to specified window.
 void diagnostics(WINDOW * win)

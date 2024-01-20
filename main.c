@@ -167,9 +167,9 @@ int main(int argc, char* argv[])
                     case 'F':
                         //flee from combat;
                         mvwprintw(combatwin, 1, 2, "You flee from combat!");
-                        wrefresh(combatwin);
-                        update_gui();
+                        wrefresh(combatwin);                        
                         free_mobs();
+                        update_gui();                        
                         game->state = GAME_PLAYING;
                         break;
                     case 'a':

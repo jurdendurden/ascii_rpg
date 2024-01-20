@@ -160,6 +160,7 @@
 //Game defines
 #define MAX_LEVEL               50      //max level for mobiles/players
 #define MAX_MONSTERS            4       //maximum mobiles in monster table
+#define MAX_PARTY               4       //max monsters in party or characters in player's party
 
 
 //Structs
