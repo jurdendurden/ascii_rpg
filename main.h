@@ -88,17 +88,16 @@
 #define TILE_TUNDRA             15
 #define TILE_FWOODS             16 //frozed woods
 
-/*#define TILE_MUSHROOM_FOREST    11
-
-#define TILE_ROAD_NS            13
-#define TILE_ROAD_EW            14
-#define TILE_ROAD_X             15
-#define TILE_ROAD_NW            16
-#define TILE_ROAD_NE            16
-#define TILE_ROAD_SW            16
-#define TILE_ROAD_SE            17
-#define TILE_ROAD_4WAY          18
-#define TILE_ROAD_TOWN          19
+/*#define TILE_MUSHROOM_FOREST    17
+#define TILE_ROAD_NS            18
+#define TILE_ROAD_EW            19
+#define TILE_ROAD_X             20
+#define TILE_ROAD_NW            21
+#define TILE_ROAD_NE            22
+#define TILE_ROAD_SW            23
+#define TILE_ROAD_SE            24
+#define TILE_ROAD_4WAY          25
+#define TILE_ROAD_TOWN          26
 */
 
 #define MAX_STATS               10
@@ -131,6 +130,7 @@
 
 //Item defines
 #define MAX_ITEMS               5
+#define MAX_ITEM_TYPE           5
 
 #define ITEM_BOAT               0       //can travel across shallows
 #define ITEM_SHOVEL             1       //grants ability to dig in land rooms
@@ -212,7 +212,9 @@ struct item_info
     char *              name;
     char *              description;    
     COORDS *            coords;
-    short               stats[]; 
+    byte                type;           //allows up to 255 for MAX_ITEM_TYPE
+    byte                level;
+    short               stats[MAX_STATS]; 
 };
 
 struct map_info
@@ -276,12 +278,14 @@ extern const struct monster_info        monster_table[];
 
 
 //Global variables/pointers
-
 extern MAP * map;
-extern ACTOR * ch;
+
 extern GAME * game;
 
+extern ACTOR * ch;
 extern ACTOR * mobs[5]; //allow for groups of four mobs.
+
+extern ITEM * item_list;
 
 extern WINDOW * statuswin;
 extern WINDOW * mapwin;
@@ -294,6 +298,7 @@ extern int screen_x;
 extern int screen_y;
 
 extern int SEED;
+//
 
 //Global function declarations
 
@@ -309,16 +314,12 @@ void check_exp(ACTOR * ch);
 
 //items.c
 ITEM * new_item();
-void generate_items(MAP * map, int amt);
+void generate_items(MAP * map, int amt, int type);
 
 //map.c
 bool land_adjacent(MAP * map, int x, int y);
 bool water_adjacent(MAP * map, int x, int y);
 bool cave_adjacent(MAP *map, int x, int y);
-
-
 bool in_view(ACTOR * ch, int x, int y);
-
 int get_view_range(ACTOR * ch);
-
 void add_caves(MAP * map);

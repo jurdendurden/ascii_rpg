@@ -2,20 +2,13 @@
 
 void add_exp(ACTOR * ch, int exp);
 void check_exp(ACTOR * ch);
-
 void set_monster(ACTOR * mob, ACTOR * ch, int level);
-
 void check_combat(ACTOR * ch);
 
 void update_time(int min);
 void update_gui();
-
 int rnd_num(int min, int max);
 
-char const * item_names[MAX_ITEMS] = 
-{
-    "boat", "shovel", "lantern", "fishing pole", "bomb"
-};
 
 
 ACTOR * new_actor(void)
@@ -81,21 +74,21 @@ void add_exp(ACTOR * ch, int exp)
     check_exp(ch);    
 }
 
+//See if the player is ready to level up, and advance them if so.
 void check_exp(ACTOR * ch)
 {
     if (ch->exp >= ch->level * 1000)
     {
         mvwprintw(statuswin, 1, 2, "You raise a level!");
 
-         ch->level++;
+        ch->level++;
         ch->max_hp += rnd_num(4,8);
         
         update_gui();
     }
-
-       
 }
 
+//Move an ACTOR (player or monster) around the map
 void move_char(ACTOR * ch, int x, int y)
 {
     if (!ch)
@@ -104,23 +97,29 @@ void move_char(ACTOR * ch, int x, int y)
     ch->coords->x += x;
     ch->coords->y += y;
 
-    if (!ch->explored[ch->coords->x][ch->coords->y])
+
+    if (!ch->npc)
     {
-        ch->explored[ch->coords->x][ch->coords->y] = true;
-        add_exp(ch, 5);                                                         
-    }          
-    
-    update_time(tile_table[map->tiles[ch->coords->x][ch->coords->y]].minutes);
-    check_combat(ch);
+        if (!ch->explored[ch->coords->x][ch->coords->y])
+        {
+            ch->explored[ch->coords->x][ch->coords->y] = true;
+            add_exp(ch, 5);                                                         
+        }          
+        
+        update_time(tile_table[map->tiles[ch->coords->x][ch->coords->y]].minutes);
+        check_combat(ch);
+    }
 
     return;
 }
 
+//Checked after a player moves, and occasionally generates
+//a monster/monster party and initiates combat.
 void check_combat(ACTOR * ch)
 {    
     int chance = 0;
 
-    if (!ch)
+    if (!ch || ch->npc)
         return;
 
     chance = rnd_num(1,100);
@@ -129,7 +128,7 @@ void check_combat(ACTOR * ch)
     {
         set_monster(mobs[0], ch, 1);        
 
-        mvwprintw(statuswin, 1, 2, "An angry %s appears!", mobs[0]->name);
+        SEND(statuswin, 1, 2, "An angry %s appears!", mobs[0]->name);
         wrefresh(statuswin);
         game->state = GAME_COMBAT;
         update_gui();

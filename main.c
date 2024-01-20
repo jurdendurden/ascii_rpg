@@ -37,8 +37,9 @@ void update_gui();
 //Globals
 MAP * map;
 ACTOR * ch;
-GAME * game;
 ACTOR * mobs[5];
+GAME * game;
+ITEM * item_list;
 WINDOW * statuswin;
 WINDOW * mapwin;
 WINDOW * diagwin;
@@ -258,8 +259,7 @@ int main(int argc, char* argv[])
                         else                                        
                             sprintf(buf, "You need a fishing pole first!");       
                                                 
-                        SEND(statuswin, 2, 1, "%s", buf);                        
-                        //mvwprintw(statuswin, 1, 2, "%s", buf);
+                        SEND(statuswin, 2, 1, "%s", buf);                                                
                         update_gui();
                         break;           
 
