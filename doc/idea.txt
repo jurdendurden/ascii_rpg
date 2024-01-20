@@ -1,0 +1,5 @@
+Ideas for improvement:
+
+- replace only portions of the windows each update_gui()
+
+- 

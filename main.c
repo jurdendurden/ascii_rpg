@@ -1,8 +1,12 @@
+//INCLUDES
 #include "main.h"
 #include "perlin.h"
+//
+
+
 //FUNCTION DECLARATIONS
 
-//externals
+//Externals
 MAP * new_map();
 GAME * new_game();
 void fix_map(MAP * map);
@@ -13,7 +17,7 @@ void add_rivers(MAP * map);
 void set_monster(ACTOR * mob, ACTOR * ch, int level);
 void free_mobs();
 
-//locals
+//Locals
 int get_tile(double value, int x, int y);
 
 void print_map(WINDOW * win, ACTOR * ch);
@@ -22,11 +26,15 @@ void generate_perlin_noise_map(MAP * map);
 void declare_colors(void);
 void print_in_middle(WINDOW *win, int starty, int startx, int width, char *string);
 void update_time();
-void diagnostics();
+void diagnostics(WINDOW * win);
 
 void update_gui();
+//
 
 
+//VARIABLES
+
+//Globals
 MAP * map;
 ACTOR * ch;
 GAME * game;
@@ -42,7 +50,11 @@ int screen_y;
 int screen_x;
 
 int SEED;
+//
 
+
+
+//Entry function for program. Holds game loop logic.
 int main(int argc, char* argv[])
 {    
         
@@ -90,19 +102,23 @@ int main(int argc, char* argv[])
     
     getmaxyx(stdscr, screen_y, screen_x);
 
-    //Set up each window
+    //Set up each window with size/coords. 
+    //(Y, X, height, width) (ncurses does everything Y/X instead of X/Y)
     statuswin = newwin(6, SCREEN_W / 2, screen_y - 6, 2);
     diagwin = newwin(6, SCREEN_W / 2, screen_y - 6, SCREEN_W / 2 + 2);
     mapwin = newwin(SCREEN_H, SCREEN_W, 2, 2);
     infowin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, 2, SCREEN_W + 3);
     combatwin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, SCREEN_H / 2 + 3, SCREEN_W + 3);
            
-    
+    //Window borders
     box(statuswin, 0, 0);    
     box(diagwin, 0, 0);
     box(infowin, 0, 0);
     box(combatwin, 0, 0);
+    //
 
+
+    //Generate player starting spot in the world
     ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
     ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);                
 
@@ -111,16 +127,17 @@ int main(int argc, char* argv[])
         ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
         ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
     }
-
-    game->state = GAME_PLAYING;
     
+    game->state = GAME_PLAYING;    
     refresh();    
-
     update_gui();
 
-    //take input from user. keypad allows KEY_UP/etc macros    
+    //Take input from user. keypad allows KEY_UP/etc macros    
+    //Tied to mapwin to keep out conflicting keystrokes in
+    //other windows.
     keypad(mapwin, true);
 
+    //Start the fun
     while (game->state != GAME_EXIT)
     {   
         int c = wgetch(mapwin);
@@ -130,6 +147,7 @@ int main(int argc, char* argv[])
             default:
                 break;
 
+            //Combat related functions
             case GAME_COMBAT:
             {                   
                 for (int i = 0; i < 5; i++)  
@@ -160,7 +178,6 @@ int main(int argc, char* argv[])
                     case 'i':
                     case 'I':
                         //use item;
-
                 }
 
                 break;
@@ -240,9 +257,9 @@ int main(int argc, char* argv[])
                         }
                         else                                        
                             sprintf(buf, "You need a fishing pole first!");       
-                        
-                        
-                        mvwprintw(statuswin, 1, 2, "%s", buf);
+                                                
+                        SEND(statuswin, 2, 1, "%s", buf);                        
+                        //mvwprintw(statuswin, 1, 2, "%s", buf);
                         update_gui();
                         break;           
 
@@ -285,15 +302,16 @@ int main(int argc, char* argv[])
                             ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
                         }
                         update_gui();
-
                         break;
                     //F Keys:
-                    case KEY_F(1):
+                    case KEY_F(1):      //Push game time forward 1 hour.
                         game->hour++;      
                         update_gui();                    
                         break;
                                 
                 } 
+                if (buf[0] != '\0')
+                    SEND(statuswin, 2, 1, "%s", buf);  
                 mvwprintw(statuswin, 1, 2, "                              ");
                 mvwprintw(diagwin, 4, 2, "                              ");   
                 mvwprintw(infowin, 1, 2, "                              ");   
@@ -314,68 +332,25 @@ int main(int argc, char* argv[])
 
 void update_gui()
 {
+    //Draw borders
     box(statuswin, 0, 0);    
     box(diagwin, 0, 0);
     box(infowin, 0, 0);
     box(combatwin, 0, 0);
 
+
+    //Draw all gui elements
     print_map(mapwin, ch);                        
     print_player(mapwin, ch);
     stats(statuswin, ch);
-    diagnostics(); 
+    diagnostics(diagwin); 
 
+    //Refresh each window
     wrefresh(mapwin);    
     wrefresh(statuswin);   
     wrefresh(diagwin);
     wrefresh(infowin);
     wrefresh(combatwin);
+
     return;
-}
-
-void update_time(int min)
-{
-    game->minute += min;
-    
-    while (game->minute > 59)
-    {
-        game->hour++;
-        game->minute -= 60;
-
-        while (game->hour > 23)
-        {
-            game->day++;
-            game->hour -= 24;
-
-            while (game->day > 7)
-            {
-                game->week++;
-                game->day = 1;
-
-                while (game->week > 4)
-                {
-                    game->month++;
-                    game->week = 1;
-
-                    while (game->month > 12)
-                    {
-                        game->year++;
-                        game->month = 1;
-                    }
-                }                
-            }
-        }
-    }
-    return;
-}
-
-
-
-void diagnostics()
-{
-    mvwprintw(diagwin, 2, 2, "Seed: %d    Colors: %d", SEED, COLORS);
-    
-    mvwprintw(diagwin, 3, 2, "Tile Mem: %2.2lfMB", (float)(sizeof(*map)) / 1024 / 1024);
-
-    mvwprintw(diagwin, 4, 2, "Viewport: %d   Elev: %lf   Tile: %s", 
-        get_view_range(ch), map->elevation[ch->coords->x][ch->coords->y], TILE_NAME(ch->coords->x, ch->coords->y));
 }

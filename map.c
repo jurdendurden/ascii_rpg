@@ -478,13 +478,34 @@ int get_view_range(ACTOR * ch)
         case 20 ... 23:
         case 0 ... 4:
             range = VIEW_RANGE;
+            break;
         case 6:
+            if (game->minute < 30)
+                range = VIEW_RANGE + 3;
+            else
+                range = VIEW_RANGE + 4;
+            break;
         case 19:
-            range = VIEW_RANGE + 1;
+            if (game->minute < 30)
+                range = VIEW_RANGE + 2;
+            else
+                range = VIEW_RANGE + 1;
+            break;
         case 5:
+            if (game->minute < 30)
+                range = VIEW_RANGE + 1;
+            else
+                range = VIEW_RANGE + 2;
+            break;
         case 18:
+            if (game->minute > 30)
+                range = VIEW_RANGE + 3;
+            else
+                range = VIEW_RANGE + 4;
+            break;
         default:  
-            range = VIEW_RANGE + 2;
+            range = VIEW_RANGE;
+            break;
     }
 
     if (game->hour > 5 && game->hour < 20)

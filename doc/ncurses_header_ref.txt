@@ -1,0 +1,621 @@
+ NAME
+curses.h - definitions for screen handling and optimisation functions
+SYNOPSIS
+
+
+#include <curses.h>
+
+DESCRIPTION
+
+Objects
+The <curses.h> header provides a declaration for COLOR_PAIRS, COLORS, COLS, curscr, LINES and stdscr.
+
+Constants
+The following constants are defined:
+EOF
+Function return value for end-of-file
+ERR
+Function return value for failure
+FALSE
+Boolean false value
+OK
+Function return value for success
+TRUE
+Boolean true value
+WEOF
+Wide-character function return value for end-of-file, as defined in <wchar.h>.
+The following constant is defined if the implementation supports the indicated revision of the X/Open Curses specification:
+
+_XOPEN_CURSES
+X/Open Curses, Issue 4, Version 2, July 1996, (ISBN: 1-85912-171-3, C610) (this document).
+ Data Types
+The following data types are defined through typedef:
+attr_t
+An OR-ed set of attributes
+bool
+Boolean data type
+chtype
+A character, attributes  and a colour-pair
+SCREEN
+An opaque terminal representation
+wchar_t
+As described in <stddef.h>
+wint_t
+As described in <wchar.h>
+cchar_t
+References a string of wide characters
+WINDOW
+An opaque window representation
+These data types are described in more detail in Data Types.
+
+The inclusion of <curses.h> may make visible all symbols from the headers <stdio.h>, <term.h>, <termios.h> and <wchar.h>.
+ Attribute Bits
+The following symbolic constants are used to manipulate objects of type attr_t:
+
+WA_ALTCHARSET  Alternate character set
+WA_BLINK       Blinking
+WA_BOLD        Extra bright or bold
+WA_DIM         Half bright
+WA_HORIZONTAL  Horizontal highlight
+WA_INVIS       Invisible
+WA_LEFT        Left highlight
+WA_LOW         Low highlight
+WA_PROTECT     Protected
+WA_REVERSE     Reverse video
+WA_RIGHT       Right highlight
+WA_STANDOUT    Best highlighting mode of the terminal
+WA_TOP         Top highlight
+WA_UNDERLINE   Underlining
+WA_VERTICAL    Vertical highlight
+
+These attribute flags shall be distinct.
+The following symbolic constants are used to manipulate attribute bits in objects of type chtype:
+
+
+A_ALTCHARSET   Alternate character set
+A_BLINK        Blinking
+A_BOLD         Extra bright or bold
+A_DIM          Half bright
+A_INVIS        Invisible
+A_PROTECT      Protected
+A_REVERSE      Reverse video
+A_STANDOUT     Best highlighting mode of the terminal
+A_UNDERLINE    Underlining
+
+These attribute flags need not be distinct  except when _XOPEN_CURSES is defined and the application sets _XOPEN_SOURCE_EXTENDED to 1.
+The following symbolic constants can be used as bit-masks to extract the components of a chtype:
+
+
+A_ATTRIBUTES   Bit-mask to extract attributes
+A_CHARTEXT     Bit-mask to extract a character
+A_COLOR        Bit-mask to extract colour-pair information
+
+
+ Line-drawing Constants
+The <curses.h> header defines the symbolic constants shown in the leftmost two columns of the following table for use in drawing lines. The symbolic constants that begin with ACS_ are char constants. The symbolic constants that begin with WACS_ are cchar_t constants for use with the wide-character interfaces that take a pointer to a cchar_t.
+In the POSIX locale, the characters shown in the POSIX Locale Default column are used when the terminal database does not specify a value using the acsc capability.
+
+char Constant	cchar_t Constant	POSIX Locale Default	Glyph Description
+ACS_ULCORNER	WACS_ULCORNER	+	upper left-hand corner
+ACS_LLCORNER	WACS_LLCORNER	+	lower left-hand corner
+ACS_URCORNER	WACS_URCORNER	+	upper right-hand corner
+ACS_LRCORNER	WACS_LRCORNER	+	lower right-hand corner
+ACS_RTEE	WACS_RTEE	+	right tee
+ACS_LTEE	WACS_LTEE	+	left tee
+ACS_BTEE	WACS_BTEE	+	bottom tee
+ACS_TTEE	WACS_TTEE	+	top tee
+ACS_HLINE	WACS_HLINE	-	horizontal line
+ACS_VLINE	WACS_VLINE	|	vertical line
+ACS_PLUS	WACS_PLUS	+	plus
+ACS_S1	WACS_S1	-	scan line 1
+ACS_S9	WACS_S9	_	scan line 9
+ACS_DIAMOND	WACS_DIAMOND	+	diamond
+ACS_CKBOARD	WACS_CKBOARD	:	checker board (stipple)
+ACS_DEGREE	WACS_DEGREE	'	degree symbol
+ACS_PLMINUS	WACS_PLMINUS	#	plus/minus
+ACS_BULLET	WACS_BULLET	o	bullet
+ACS_LARROW	WACS_LARROW	<	arrow pointing left
+ACS_RARROW	WACS_RARROW	>	arrow pointing right
+ACS_DARROW	WACS_DARROW	v	arrow pointing down
+ACS_UARROW	WACS_UARROW	^	arrow pointing up
+ACS_BOARD	WACS_BOARD	#	board of squares
+ACS_LANTERN	WACS_LANTERN	#	lantern symbol
+ACS_BLOCK	WACS_BLOCK	#	solid square block
+ Colour-related Macros
+The following colour-related macros are defined:
+COLOR_BLACK
+COLOR_BLUE
+COLOR_GREEN
+COLOR_CYAN
+COLOR_RED
+COLOR_MAGENTA
+COLOR_YELLOW
+COLOR_WHITE
+ Coordinate-related Macros
+The following coordinate-related macros are defined:
+
+void   getbegyx(WINDOW *win, int y, int x);
+void   getmaxyx(WINDOW *win, int y, int x);
+void   getparyx(WINDOW *win, int y, int x);
+void   getyx(WINDOW *win, int y, int x);
+
+ Key Codes
+The following symbolic constants representing function key values are defined:
+Key Code	Description
+KEY_CODE_YES	Used to indicate that a wchar_t variable
+contains a key code
+KEY_BREAK	Break key
+KEY_DOWN	Down arrow key
+KEY_UP	Up arrow key
+KEY_LEFT	Left arrow key
+KEY_RIGHT	Right arrow key
+KEY_HOME	Home key
+KEY_BACKSPACE	Backspace
+KEY_F0	Function keys; space for 64 keys is reserved
+KEY_F(n)	For 0 <=n<=63
+KEY_DL	Delete line
+KEY_IL	Insert line
+KEY_DC	Delete character
+KEY_IC	Insert char or enter insert mode
+KEY_EIC	Exit insert char mode
+KEY_CLEAR	Clear screen
+KEY_EOS	Clear to end of screen
+KEY_EOL	Clear to end of line
+KEY_SF	Scroll 1 line forward
+KEY_SR	Scroll 1 line backward (reverse)
+KEY_NPAGE	Next page
+KEY_PPAGE	Previous page
+KEY_STAB	Set tab
+KEY_CTAB	Clear tab
+KEY_CATAB	Clear all tabs
+KEY_ENTER	Enter or send
+KEY_SRESET	Soft (partial) reset
+KEY_RESET	Reset or hard reset
+KEY_PRINT	Print or copy
+KEY_LL	Home down or bottom
+KEY_A1	Upper left of keypad
+KEY_A3	Upper right of keypad
+KEY_B2	Center of keypad
+KEY_C1	Lower left of keypad
+KEY_C3	Lower right of keypad
+The virtual keypad is a 3-by-3 keypad arranged as follows:
+
+A1	UP	A3
+LEFT	B2	RIGHT
+C1	DOWN	C3
+Each legend, such as A1, corresponds to a symbolic constant for a key code from the preceding table, such as KEY_A1.
+
+The following symbolic constants representing function key values are also defined:
+Key Code	Description
+KEY_BTAB	Back tab key
+KEY_BEG	Beginning key
+KEY_CANCEL	Cancel key
+KEY_CLOSE	Close key
+KEY_COMMAND	Cmd (command) key
+KEY_COPY	Copy key
+KEY_CREATE	Create key
+KEY_END	End key
+KEY_EXIT	Exit key
+KEY_FIND	Find key
+KEY_HELP	Help key
+KEY_MARK	Mark key
+KEY_MESSAGE	Message key
+KEY_MOVE	Move key
+KEY_NEXT	Next object key
+KEY_OPEN	Open key
+KEY_OPTIONS	Options key
+KEY_PREVIOUS	Previous object key
+KEY_REDO	Redo key
+KEY_REFERENCE	Reference key
+KEY_REFRESH	Refresh key
+KEY_REPLACE	Replace key
+KEY_RESTART	Restart key
+KEY_RESUME	Resume key
+KEY_SAVE	Save key
+KEY_SBEG	Shifted beginning key
+KEY_SCANCEL	Shifted cancel key
+KEY_SCOMMAND	Shifted command key
+KEY_SCOPY	Shifted copy key
+KEY_SCREATE	Shifted create key
+KEY_SDC	Shifted delete char key
+KEY_SDL	Shifted delete line key
+KEY_SELECT	Select key
+KEY_SEND	Shifted end key
+KEY_SEOL	Shifted clear line key
+KEY_SEXIT	Shifted exit key
+KEY_SFIND	Shifted find key
+KEY_SHELP	Shifted help key
+KEY_SHOME	Shifted home key
+KEY_SIC	Shifted input key
+KEY_SLEFT	Shifted left arrow key
+KEY_SMESSAGE	Shifted message key
+KEY_SMOVE	Shifted move key
+KEY_SNEXT	Shifted next key
+KEY_SOPTIONS	Shifted options key
+KEY_SPREVIOUS	Shifted prev key
+KEY_SPRINT	Shifted print key
+KEY_SREDO	Shifted redo key
+KEY_SREPLACE	Shifted replace key
+KEY_SRIGHT	Shifted right arrow
+KEY_SRSUME	Shifted resume key
+KEY_SSAVE	Shifted save key
+KEY_SSUSPEND	Shifted suspend key
+KEY_SUNDO	Shifted undo key
+KEY_SUSPEND	Suspend key
+KEY_UNDO	Undo key
+ Function Prototypes
+The following are declared as functions, and may also be defined as macros:
+
+int    addch(const chtype);
+int    addchnstr(const chtype *, int);
+int    addchstr(const chtype *);
+int    addnstr(const char *, int);
+int    addnwstr(const wchar_t *, int);
+int    addstr(const char *);
+int    add_wch(const cchar_t *);
+int    add_wchnstr(const cchar_t *, int);
+int    add_wchstr(const cchar_t *);
+int    addwstr(const wchar_t *);
+int    attroff(int);
+int    attron(int);
+int    attrset(int);
+int    attr_get(attr_t *, short *, void *);
+int    attr_off(attr_t, void *);
+int    attr_on(attr_t, void *);
+int    attr_set(attr_t, short, void *);
+int    baudrate(void);
+int    beep(void);
+int    bkgd(chtype);
+void   bkgdset(chtype);
+int    bkgrnd(const cchar_t *);
+void   bkgrndset(const cchar_t *);
+int    border(chtype, chtype, chtype, chtype, chtype, chtype, chtype,
+              chtype);
+int    border_set(const cchar_t *, const cchar_t *, const cchar_t *,
+                  const cchar_t *, const cchar_t *, const cchar_t *,
+                  const cchar_t *, const cchar_t *);
+int    box(WINDOW *, chtype, chtype);
+int    box_set(WINDOW *, const cchar_t *, const cchar_t *);
+bool   can_change_color(void);
+int    cbreak(void); 
+int    chgat(int, attr_t, short, const void *);
+int    clearok(WINDOW *, bool);
+int    clear(void);
+int    clrtobot(void);
+int    clrtoeol(void);
+int    color_content(short, short *, short *, short *);
+int    COLOR_PAIR(int);
+int    color_set(short,void *);
+int    copywin(const WINDOW *, WINDOW *, int, int, int, int, int, int,
+               int);
+int    curs_set(int);
+int    def_prog_mode(void);
+int    def_shell_mode(void);
+int    delay_output(int);
+int    delch(void);
+int    deleteln(void);
+void   delscreen(SCREEN *); 
+int    delwin(WINDOW *);
+WINDOW *derwin(WINDOW *, int, int, int, int);
+int    doupdate(void);
+WINDOW *dupwin(WINDOW *);
+int    echo(void);
+int    echochar(const chtype);
+int    echo_wchar(const cchar_t *);
+int    endwin(void);
+char   erasechar(void);
+int    erase(void);
+int    erasewchar(wchar_t *);
+void   filter(void);
+int    flash(void);
+int    flushinp(void);
+chtype getbkgd(WINDOW *);
+int    getbkgrnd(cchar_t *);
+int    getcchar(const cchar_t *, wchar_t *, attr_t *, short *, void *);
+int    getch(void);
+int    getnstr(char *, int);
+int    getn_wstr(wint_t *, int);
+int    getstr(char *);
+int    get_wch(wint_t *);
+WINDOW *getwin(FILE *);
+int    get_wstr(wint_t *);
+int    halfdelay(int);
+bool   has_colors(void);
+bool   has_ic(void);
+bool   has_il(void);
+int    hline(chtype, int);
+int    hline_set(const cchar_t *, int);
+void   idcok(WINDOW *, bool);
+int    idlok(WINDOW *, bool);
+void   immedok(WINDOW *, bool);
+chtype inch(void);
+int    inchnstr(chtype *, int);
+int    inchstr(chtype *);
+WINDOW *initscr(void);
+int    init_color(short, short, short, short);
+int    init_pair(short, short, short);
+int    innstr(char *, int);
+int    innwstr(wchar_t *, int);
+int    insch(chtype);
+int    insdelln(int);
+int    insertln(void);
+int    insnstr(const char *, int);
+int    ins_nwstr(const wchar_t *, int);
+int    insstr(const char *);
+int    instr(char *);
+int    ins_wch(const cchar_t *);
+int    ins_wstr(const wchar_t *);
+int    intrflush(WINDOW *, bool);
+int    in_wch(cchar_t *);
+int    in_wchnstr(cchar_t *, int);
+int    in_wchstr(cchar_t *);
+int    inwstr(wchar_t *);
+bool   isendwin(void);
+bool   is_linetouched(WINDOW *, int);
+bool   is_wintouched(WINDOW *);
+char   *keyname(int);
+char   *key_name(wchar_t);
+int    keypad(WINDOW *, bool);
+char   killchar(void);
+int    killwchar(wchar_t *);
+int    leaveok(WINDOW *, bool);
+char   *longname(void);
+int    meta(WINDOW *, bool);
+int    move(int, int);
+int    mvaddch(int, int, const chtype);
+int    mvaddchnstr(int, int, const chtype *, int);
+int    mvaddchstr(int, int, const chtype *);
+int    mvaddnstr(int, int, const char *, int);
+int    mvaddnwstr(int, int, const wchar_t *, int);
+int    mvaddstr(int, int, const char *);
+int    mvadd_wch(int, int, const cchar_t *);
+int    mvadd_wchnstr(int, int, const cchar_t *, int);
+int    mvadd_wchstr(int, int, const cchar_t *);
+int    mvaddwstr(int, int, const wchar_t *);
+int    mvchgat(int, int, int, attr_t, short, const void *);
+int    mvcur(int, int, int, int);
+int    mvdelch(int, int);
+int    mvderwin(WINDOW *, int, int);
+int    mvgetch(int, int);
+int    mvgetnstr(int, int, char *, int);
+int    mvgetn_wstr(int, int, wint_t *, int);
+int    mvgetstr(int, int, char *);
+int    mvget_wch(int, int, wint_t *);
+int    mvget_wstr(int, int, wint_t *);
+int    mvhline(int, int, chtype, int);
+int    mvhline_set(int, int, const cchar_t *, int);
+chtype mvinch(int, int);
+int    mvinchnstr(int, int, chtype *, int);
+int    mvinchstr(int, int, chtype *);
+int    mvinnstr(int, int, char *, int);
+int    mvinnwstr(int, int, wchar_t *, int);
+int    mvinsch(int, int, chtype);
+int    mvinsnstr(int, int, const char *, int);
+int    mvins_nwstr(int, int, const wchar_t *, int);
+int    mvinsstr(int, int, const char *);
+int    mvinstr(int, int, char *);
+int    mvins_wch(int, int, const cchar_t *);
+int    mvins_wstr(int, int, const wchar_t *);
+int    mvin_wch(int, int, cchar_t *);
+int    mvin_wchnstr(int, int, cchar_t *, int);
+int    mvin_wchstr(int, int, cchar_t *);
+int    mvinwstr(int, int, wchar_t *);
+int    mvprintw(int, int, char *,  ...);
+int    mvscanw(int, int, char *, ...);
+int    mvvline(int, int, chtype, int);
+int    mvvline_set(int, int, const cchar_t *, int);
+int    mvwaddch(WINDOW *, int, int, const chtype);
+int    mvwaddchnstr(WINDOW *, int, int, const chtype *, int);
+int    mvwaddchstr(WINDOW *, int, int, const chtype *);
+int    mvwaddnstr(WINDOW *, int, int, const char *, int);
+int    mvwaddnwstr(WINDOW *, int, int, const wchar_t *, int);
+int    mvwaddstr(WINDOW *, int, int, const char *);
+int    mvwadd_wch(WINDOW *, int, int, const cchar_t *);
+int    mvwadd_wchnstr(WINDOW *, int, int, const cchar_t *, int);
+int    mvwadd_wchstr(WINDOW *, int, int, const cchar_t *);
+int    mvwaddwstr(WINDOW *, int, int, const wchar_t *);
+int    mvwchgat(WINDOW *, int, int, int, attr_t, short, const void *);
+int    mvwdelch(WINDOW *, int, int);
+int    mvwgetch(WINDOW *, int, int);
+int    mvwgetnstr(WINDOW *, int, int, char *, int);
+int    mvwgetn_wstr(WINDOW *, int, int, wint_t *, int);
+int    mvwgetstr(WINDOW *, int, int, char *);
+int    mvwget_wch(WINDOW *, int, int, wint_t *);
+int    mvwget_wstr(WINDOW *, int, int, wint_t *);
+int    mvwhline(WINDOW *, int, int, chtype, int);
+int    mvwhline_set(WINDOW *, int, int, const cchar_t *, int);
+int    mvwin(WINDOW *, int, int);
+chtype mvwinch(WINDOW *, int, int);
+int    mvwinchnstr(WINDOW *, int, int, chtype *, int);
+int    mvwinchstr(WINDOW *, int, int, chtype *);
+int    mvwinnstr(WINDOW *, int, int, char *, int);
+int    mvwinnwstr(WINDOW *, int, int, wchar_t *, int);
+int    mvwinsch(WINDOW *, int, int, chtype);
+int    mvwinsnstr(WINDOW *, int, int, const char *, int);
+int    mvwins_nwstr(WINDOW *, int, int, const wchar_t *, int);
+int    mvwinsstr(WINDOW *, int, int, const char *);
+int    mvwinstr(WINDOW *, int, int, char *);
+int    mvwins_wch(WINDOW *, int, int, const cchar_t *);
+int    mvwins_wstr(WINDOW *, int, int, const wchar_t *);
+int    mvwin_wch(WINDOW *, int, int, cchar_t *);
+int    mvwin_wchnstr(WINDOW *, int, int, cchar_t *, int);
+int    mvwin_wchstr(WINDOW *, int, int, cchar_t *);
+int    mvwinwstr(WINDOW *, int, int, wchar_t *);
+int    mvwprintw(WINDOW *, int, int, char *, ...);
+int    mvwscanw(WINDOW *, int, int, char *, ...);
+int    mvwvline(WINDOW *, int, int, chtype, int);
+int    mvwvline_set(WINDOW *, int, int, const cchar_t *, int);
+int    napms(int);
+WINDOW *newpad(int, int);
+SCREEN *newterm(char *, FILE *, FILE *);
+WINDOW *newwin(int, int, int, int);
+int    nl(void);
+int    nocbreak(void);
+int    nodelay(WINDOW *, bool);
+int    noecho(void);
+int    nonl(void);
+void   noqiflush(void);
+int    noraw(void);
+int    notimeout(WINDOW *, bool);
+int    overlay(const WINDOW *, WINDOW *);
+int    overwrite(const WINDOW *, WINDOW *);
+int    pair_content(short, short *, short *);
+int    PAIR_NUMBER(int);
+int    pechochar(WINDOW *, chtype);
+int    pecho_wchar(WINDOW *, const cchar_t*);
+int    pnoutrefresh(WINDOW *, int, int, int, int, int, int);
+int    prefresh(WINDOW *, int, int, int, int, int, int);
+int    printw(char *, ...);
+int    putp(const char *);
+int    putwin(WINDOW *, FILE *);
+void   qiflush(void);
+int    raw(void);
+int    redrawwin(WINDOW *);
+int    refresh(void);
+int    reset_prog_mode(void);
+int    reset_shell_mode(void);
+int    resetty(void);
+int    ripoffline(int, int (*)(WINDOW *, int));
+int    savetty(void);
+int    scanw(char *, ...);
+int    scr_dump(const char *);
+int    scr_init(const char *);
+int    scrl(int);
+int    scroll(WINDOW *);
+int    scrollok(WINDOW *, bool);
+int    scr_restore(const char *);
+int    scr_set(const char *);
+int    setcchar(cchar_t*, const wchar_t*, const attr_t, short,
+                const void*);
+int    setscrreg(int, int);
+SCREEN *set_term(SCREEN *);
+int    setupterm(char *, int, int *);
+int    slk_attr_off(const attr_t, void *);
+int    slk_attroff(const chtype);
+int    slk_attr_on(const attr_t, void *);
+int    slk_attron(const chtype);
+int    slk_attr_set(const attr_t, short, void *);
+int    slk_attrset(const chtype);
+int    slk_clear(void);
+int    slk_color(short);
+int    slk_init(int);
+char   *slk_label(int);
+int    slk_noutrefresh(void);
+int    slk_refresh(void);
+int    slk_restore(void);
+int    slk_set(int, const char *, int);
+int    slk_touch(void);
+int    slk_wset(int, const wchar_t *, int);
+int    standend(void);
+int    standout(void);
+int    start_color(void);
+WINDOW *subpad(WINDOW *, int, int, int, int);
+WINDOW *subwin(WINDOW *, int, int, int, int);
+int    syncok(WINDOW *, bool);
+chtype termattrs(void);
+attr_t term_attrs(void);
+char   *termname(void);
+int    tigetflag(char *);
+int    tigetnum(char *);
+char   *tigetstr(char *);
+void   timeout(int);
+int    touchline(WINDOW *, int, int);
+int    touchwin(WINDOW *);
+char   *tparm(char *, long, long, long, long, long, long, long, long,
+              long);
+int    typeahead(int);
+int    ungetch(int);
+int    unget_wch(const wchar_t);
+int    untouchwin(WINDOW *);
+void   use_env(bool);
+int    vid_attr(attr_t, short, void *);
+int    vidattr(chtype);
+int    vid_puts(attr_t, short, void *, int (*)(int));
+int    vidputs(chtype, int (*)(int));
+int    vline(chtype, int);
+int    vline_set(const cchar_t *, int);
+int    vwprintw(WINDOW *, char *, va_list *);
+int    vw_printw(WINDOW *, char *, va_list *);
+int    vwscanw(WINDOW *, char *, va_list *);
+int    vw_scanw(WINDOW *, char *, va_list *);
+int    waddch(WINDOW *, const chtype);
+int    waddchnstr(WINDOW *, const chtype *, int);
+int    waddchstr(WINDOW *, const chtype *);
+int    waddnstr(WINDOW *, const char *, int);
+int    waddnwstr(WINDOW *, const wchar_t *, int);
+int    waddstr(WINDOW *, const char *);
+int    wadd_wch(WINDOW *, const cchar_t *);
+int    wadd_wchnstr(WINDOW *, const cchar_t *, int);
+int    wadd_wchstr(WINDOW *, const cchar_t *);
+int    waddwstr(WINDOW *, const wchar_t *);
+int    wattroff(WINDOW *, int);
+int    wattron(WINDOW *, int);
+int    wattrset(WINDOW *, int);
+int    wattr_get(WINDOW *, attr_t *, short *, void *);
+int    wattr_off(WINDOW *, attr_t, void *);
+int    wattr_on(WINDOW *, attr_t, void *);
+int    wattr_set(WINDOW *, attr_t, short, void *);
+int    wbkgd(WINDOW *, chtype);
+void   wbkgdset(WINDOW *, chtype);
+int    wbkgrnd(WINDOW *, const cchar_t *);
+void   wbkgrndset(WINDOW *, const cchar_t *);
+int    wborder(WINDOW *, chtype, chtype, chtype, chtype, chtype, chtype,
+               chtype, chtype);
+int    wborder_set(WINDOW *, const cchar_t *, const cchar_t *,
+                  const cchar_t *, const cchar_t *, const cchar_t *,
+                  const cchar_t *, const cchar_t *, const cchar_t *);
+int    wchgat(WINDOW *, int, attr_t, short, const void *);
+int    wclear(WINDOW *);
+int    wclrtobot(WINDOW *);
+int    wclrtoeol(WINDOW *);
+void   wcursyncup(WINDOW *);
+int    wcolor_set(WINDOW *, short, void *);
+int    wdelch(WINDOW *);
+int    wdeleteln(WINDOW *);
+int    wechochar(WINDOW *, const chtype);
+int    wecho_wchar(WINDOW *, const cchar_t *);
+int    werase(WINDOW *);
+int    wgetbkgrnd(WINDOW *, cchar_t *);
+int    wgetch(WINDOW *);
+int    wgetnstr(WINDOW *, char *, int);
+int    wgetn_wstr(WINDOW *, wint_t *, int);
+int    wgetstr(WINDOW *, char *);
+int    wget_wch(WINDOW *, wint_t *);
+int    wget_wstr(WINDOW *, wint_t *);
+int    whline(WINDOW *, chtype, int);
+int    whline_set(WINDOW *, const cchar_t *, int);
+chtype winch(WINDOW *);
+int    winchnstr(WINDOW *, chtype *, int);
+int    winchstr(WINDOW *, chtype *);
+int    winnstr(WINDOW *, char *, int);
+int    winnwstr(WINDOW *, wchar_t *, int);
+int    winsch(WINDOW *, chtype);
+int    winsdelln(WINDOW *, int);
+int    winsertln(WINDOW *);
+int    winsnstr(WINDOW *, const char *, int);
+int    wins_nwstr(WINDOW *, const wchar_t *, int);
+int    winsstr(WINDOW *, const char *);
+int    winstr(WINDOW *, char *);
+int    wins_wch(WINDOW *, const cchar_t *);
+int    wins_wstr(WINDOW *, const wchar_t *);
+int    win_wch(WINDOW *, cchar_t *);
+int    win_wchnstr(WINDOW *, cchar_t *, int);
+int    win_wchstr(WINDOW *, cchar_t *);
+int    winwstr(WINDOW *, wchar_t *);
+int    wmove(WINDOW *, int, int);
+int    wnoutrefresh(WINDOW *);
+int    wprintw(WINDOW *, char *, ...);
+int    wredrawln(WINDOW *, int, int);
+int    wrefresh(WINDOW *);
+int    wscanw(WINDOW *, char *, ...);
+int    wscrl(WINDOW *, int);
+int    wsetscrreg(WINDOW *, int, int);
+int    wstandend(WINDOW *);
+int    wstandout(WINDOW *);
+void   wsyncup(WINDOW *);
+void   wsyncdown(WINDOW *);
+void   wtimeout(WINDOW *, int);
+int    wtouchln(WINDOW *, int, int, int);
+wchar_t *wunctrl(cchar_t *);
+int    wvline(WINDOW *, chtype, int);
+int    wvline_set(WINDOW *, const cchar_t *, int);

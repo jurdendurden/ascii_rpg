@@ -53,9 +53,11 @@
 #define CLR_ENEMY               255
 #define CLR_PLAYER              256
 
-//Windows attr macros for ncurses
+//Window macros for ncurses
 #define CLR_ON(win,clr)             (wattron(win, clr))
 #define CLR_OFF(win,clr)            (wattroff(win, clr))
+#define SEND(win, X, Y, msg, buf)        (mvwprintw(win, Y, X, msg, buf))
+
 
 //Individual ncurses color codes
 #define COLOR_BWHITE            15

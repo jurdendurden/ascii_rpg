@@ -18,6 +18,8 @@ void set_monster(ACTOR * mob, ACTOR * ch, int level)
     while (index == 0)
         index = rnd_num(0, MAX_MONSTERS - 1);
     
+    if (!mob)
+        mob = new_actor();
 
     mob->coords->x = ch->coords->x;
     mob->coords->y = ch->coords->y;
@@ -42,6 +44,6 @@ void free_mobs()
     int i = 0;    
 
     for (i = 0; i < 5; i++)
-        mobs[i] == NULL;
+        mobs[i] = NULL;
 }
 
