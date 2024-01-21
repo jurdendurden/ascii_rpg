@@ -1,5 +1,4 @@
 #include "main.h"
-#include "items.h"
 
 ITEM * new_item()
 {
@@ -27,8 +26,7 @@ void generate_items(MAP * map, int amt, int type)
     for (i = 0; i < amt; i++)
     {
         
-        obj = new_item();
-        obj->level = rnd_num(1,MAX_LEVEL);
+        obj = new_item();        
         obj->type = type;
         //assign random name here
 

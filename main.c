@@ -13,6 +13,7 @@ void fix_map(MAP * map);
 void set_map(MAP * map);
 void move_char(ACTOR * ch, int x, int y);
 void add_rivers(MAP * map);
+void mob_stats(WINDOW * win);
 
 void set_monster(ACTOR * mob, ACTOR * ch, int level);
 void free_mobs();
@@ -51,11 +52,13 @@ int screen_y;
 int screen_x;
 
 int SEED;
+
+bool combat_turn;
 //
 
 
 
-//Entry function for program. Holds game loop logic.
+///Entry function for program. Holds game loop logic.
 int main(int argc, char* argv[])
 {    
         
@@ -108,8 +111,8 @@ int main(int argc, char* argv[])
     statuswin = newwin(6, SCREEN_W / 2, screen_y - 6, 2);
     diagwin = newwin(6, SCREEN_W / 2, screen_y - 6, SCREEN_W / 2 + 2);
     mapwin = newwin(SCREEN_H, SCREEN_W, 2, 2);
-    infowin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, 2, SCREEN_W + 3);
-    combatwin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, SCREEN_H / 2 + 3, SCREEN_W + 3);
+    combatwin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, 2, SCREEN_W + 3);
+    infowin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, SCREEN_H / 2 + 3, SCREEN_W + 3);
            
     //Window borders
     box(statuswin, 0, 0);    
@@ -129,6 +132,8 @@ int main(int argc, char* argv[])
         ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
     }
     
+    ch->level = 1;
+
     game->state = GAME_PLAYING;    
     refresh();    
     update_gui();
@@ -166,11 +171,21 @@ int main(int argc, char* argv[])
                     case 'f':
                     case 'F':
                         //flee from combat;
-                        mvwprintw(combatwin, 1, 2, "You flee from combat!");
-                        wrefresh(combatwin);                        
-                        free_mobs();
-                        update_gui();                        
-                        game->state = GAME_PLAYING;
+                        if (rnd_num(1,100) < 20)
+                        {
+                            mvwprintw(infowin, 1, 2, "You flee from combat!");
+                            wrefresh(infowin);                        
+                            free_mobs();
+                            wclear(combatwin);
+                            update_gui();                        
+                            game->state = GAME_PLAYING;
+                        }
+                        else
+                        {
+                            mvwprintw(infowin, 1, 2, "You couldn't escape!");
+                            wrefresh(infowin);                        
+                            combat_turn = TURN_MONSTERS;
+                        }
                         break;
                     case 'a':
                     case 'A':
@@ -339,10 +354,12 @@ void update_gui()
     box(combatwin, 0, 0);
 
 
+
     //Draw all gui elements
     print_map(mapwin, ch);                        
     print_player(mapwin, ch);
     stats(statuswin, ch);
+    mob_stats(combatwin);
     diagnostics(diagwin); 
 
     //Refresh each window

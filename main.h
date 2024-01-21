@@ -59,6 +59,9 @@
 #define SEND(win, X, Y, msg, buf)        (mvwprintw(win, Y, X, msg, buf))
 
 
+//Utility macros
+#define NULL_STR(str)               (strlen(str) < 1 || str[0] == '\0' || !strcmp(str, "(null)") || !strcmp(str, "recycled")) 
+
 //Individual ncurses color codes
 #define COLOR_BWHITE            15
 #define COLOR_GOLDENROD         227
@@ -129,13 +132,19 @@
 #define EQUATOR                 MAP_HEIGHT / 2
 
 //Item defines
-#define MAX_ITEMS               5
-#define MAX_ITEM_TYPE           5
 
+//Item types (increment MAX_ITEM_TYPE if you add more)
+enum items { WEAPON, ARMOR, SHIELD, RING, NECK, LIGHT };
+
+#define MAX_KEY_ITEMS           5
+#define MAX_ITEM_TYPE           5
+#define MAX_ITEMS               3
+
+//key items
 #define ITEM_BOAT               0       //can travel across shallows
 #define ITEM_SHOVEL             1       //grants ability to dig in land rooms
 #define ITEM_LANTERN            2       //bigger visible radius at night
-#define ITEM_FISHING_POLE       3       //use toe get a fish to trade
+#define ITEM_FISHING_POLE       3       //use to get a fish to trade
 #define ITEM_BOMB               4       //blows up mountains
 
 //Stat/Ability defines
@@ -159,13 +168,15 @@
 
 //Game defines
 #define MAX_LEVEL               50      //max level for mobiles/players
-#define MAX_MONSTERS            4       //maximum mobiles in monster table
+#define MAX_MONSTERS            7       //maximum mobiles in monster table
 #define MAX_PARTY               4       //max monsters in party or characters in player's party
 
+//Combat defines
+#define TURN_PLAYER             0
+#define TURN_MONSTERS           1
 
 //Structs
 typedef struct coords                   COORDS;
-
 typedef struct item_info                ITEM;
 typedef struct map_info                 MAP;
 typedef struct actor_info               ACTOR;
@@ -194,10 +205,7 @@ struct tile_info
 
 struct monster_info
 {
-    char *          name;
-        
-    bool            spawn_in[MAX_TILE];
-        
+    char *          name;        
     short           max_hp;
     int             level;
     int             min_dmg;
@@ -206,15 +214,17 @@ struct monster_info
 
 };
 
-struct item_info
+struct key_item_info
 {
-    ITEM *              next;
-    char *              keywords;
-    char *              name;
-    char *              description;    
-    COORDS *            coords;
-    byte                type;           //allows up to 255 for MAX_ITEM_TYPE
-    byte                level;
+    char * name;
+};
+
+struct item_info
+{    
+    char *              name;        
+    byte                type;           //allows up to 255 for MAX_ITEM_TYPE        
+    bool                unique;
+    short               value;            
     short               stats[MAX_STATS]; 
 };
 
@@ -247,13 +257,14 @@ struct actor_info
     int             exp;
 
     ITEM *          inventory;
-    bool            items[MAX_ITEMS];          //key items
+    bool            items[MAX_KEY_ITEMS];          //key items
     short           stats[MAX_STATS];
     bool            explored[MAP_WIDTH][MAP_HEIGHT];
     bool            searched[MAP_WIDTH][MAP_HEIGHT];
     bool            dug_up[MAP_WIDTH][MAP_HEIGHT];
 
     bool            npc;
+    byte            index;
     
 };
 
@@ -275,6 +286,8 @@ struct game_info
 //Tables
 extern const struct tile_info           tile_table[MAX_TILE];
 extern const struct monster_info        monster_table[];
+extern const struct key_item_info       key_item_table[MAX_KEY_ITEMS];
+extern const struct item_info           item_table[MAX_ITEMS];
 
 
 
@@ -299,6 +312,8 @@ extern int screen_x;
 extern int screen_y;
 
 extern int SEED;
+
+extern bool combat_turn;
 //
 
 //Global function declarations

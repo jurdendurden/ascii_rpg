@@ -2,7 +2,8 @@
 #include "ncurses.h"
 
 
-//Generates a random number within the given range.
+
+///Generates a random number within the given range.
 int rnd_num(int min, int max)
 { 
     int num = 0;
@@ -16,7 +17,7 @@ int rnd_num(int min, int max)
     
 }
 
-//Centered window printf: prints text to an ncurses window pre-centered.
+///Centered window printf: prints text to an ncurses window pre-centered.
 void cwprintf(WINDOW *win, int starty, int startx, int width, char *string)
 {	
     int length, x, y;
@@ -39,8 +40,8 @@ void cwprintf(WINDOW *win, int starty, int startx, int width, char *string)
 	refresh();
 }
 
-//Push time forward based in min parameter. 
-//Can only be moved forward at the moment.
+///Push time forward based in min parameter. 
+///Can only be moved forward at the moment.
 void update_time(int min)
 {
     game->minute += min;
@@ -77,7 +78,7 @@ void update_time(int min)
     return;
 }
 
-//Print diagnostics to specified window.
+///Print diagnostics to specified window.
 void diagnostics(WINDOW * win)
 {
     mvwprintw(win, 2, 2, "Seed: %d    Colors: %d", SEED, COLORS);
@@ -87,3 +88,15 @@ void diagnostics(WINDOW * win)
     mvwprintw(win, 4, 2, "Viewport: %d   Elev: %lf   Tile: %s", 
         get_view_range(ch), map->elevation[ch->coords->x][ch->coords->y], TILE_NAME(ch->coords->x, ch->coords->y));
 }
+
+///Output a string to the logfile.
+/*void log (const char *str)
+{
+    //char *strtime;
+
+    //strtime = ctime (&time);
+    //strtime[strlen (strtime) - 1] = '\0';
+    //fprintf (stderr, "%s >> %s\n", strtime, str);
+    fprintf (stderr, "%s\n", str);
+    return;
+}*/

@@ -3,3 +3,15 @@ Ideas for improvement:
 - replace only portions of the windows each update_gui()
 
 - 
+
+
+
+Stuff to do for kid to be able to play:
+
+- change hp to health and implement health meter
+
+- battling/defeating mobs
+
+- items and increasing stats
+
+- shops to buy/sell stuff
