@@ -81,10 +81,7 @@ void update_time(int min)
 ///Print diagnostics to specified window.
 void diagnostics(WINDOW * win)
 {
-    mvwprintw(win, 2, 2, "Seed: %d    Colors: %d", SEED, COLORS);
-    
-    mvwprintw(win, 3, 2, "Tile Mem: %2.2lfMB", (float)(sizeof(*map)) / 1024 / 1024);
-
+    mvwprintw(win, 2, 2, "Seed: %d    Colors: %d    Tile Mem: %2.2lfMB", SEED, COLORS, (float)(sizeof(*map)) / 1024 / 1024); 
     mvwprintw(win, 4, 2, "Viewport: %d   Elev: %lf   Tile: %s", 
         get_view_range(ch), map->elevation[ch->coords->x][ch->coords->y], TILE_NAME(ch->coords->x, ch->coords->y));
 }

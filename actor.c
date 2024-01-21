@@ -1,5 +1,7 @@
 #include "main.h"
 
+//Externals
+void mob_stats(WINDOW * win);
 void add_exp(ACTOR * ch, int exp);
 void check_exp(ACTOR * ch);
 void set_monster(ACTOR * mob, ACTOR * ch, int level);
@@ -23,7 +25,7 @@ ACTOR * new_actor(void)
     ch->max_hp = 20;
     ch->perm_hp = 20;
     ch->curr_hp = 20;
-    ch->level = 1;
+    ch->level = 0;
 
     for (i = 0; i < MAX_STATS; i++)    
         ch->stats[i] = rnd_num(5,10);
@@ -45,24 +47,35 @@ ACTOR * new_actor(void)
 //Informational
 void stats(WINDOW * win, ACTOR * ch)
 {
+    char buf[1024];
+    
     if (!win || !ch)
         return;
+   
+    mvwprintw(win, 1, 2, "HP: %d / %d   Level: %d   Exp: %d / %d", 
+        ch->curr_hp, ch->max_hp, ch->level, ch->exp, ch->level * 1000);
 
-    mvwprintw(win, 1, 2, "%s", ch->name);
-    mvwprintw(win, 2, 2, "HP: %d / %d   Level: %d", ch->curr_hp, ch->max_hp, ch->level);
+    mvwprintw(win, 2, 2, "Str:  %-d  Int:  %-d  Dex:  %-d  Vit:  %-d  Luk:  %-d",
+        ch->stats[STAT_STR], ch->stats[STAT_INT], ch->stats[STAT_DEX],
+        ch->stats[STAT_VIT], ch->stats[STAT_LUCK]);
+
+    mvwprintw(win, 3, 2, "X: %-4d   Y: %-4d   Time: %-2d:%s%1d   Date: %d/%d/%d", 
+        ch->coords->x, ch->coords->y, game->hour, game->minute < 10 ? "0" : "", game->minute, game->month, game->day, game->year);        
     
-    if (!ch->npc)
+    int i = 0;
+
+    sprintf(buf, "Items: ");
+
+    for (i = 0; i < MAX_KEY_ITEMS; i++)
     {
-        mvwprintw(win, 2, 2, "HP: %d / %d   Level: %d   Exp: %d / %d", 
-            ch->curr_hp, ch->max_hp, ch->level, ch->exp, ch->level * 1000);
-
-        mvwprintw(win, 3, 2, "Str:  %-d  Int:  %-d  Dex:  %-d  Vit:  %-d  Luk:  %-d",
-            ch->stats[STAT_STR], ch->stats[STAT_INT], ch->stats[STAT_DEX],
-            ch->stats[STAT_VIT], ch->stats[STAT_LUCK]);
-
-        mvwprintw(win, 4, 2, "X: %-4d   Y: %-4d   Time: %-2d:%s%1d   Date: %d/%d/%d", 
-            ch->coords->x, ch->coords->y, game->hour, game->minute < 10 ? "0" : "", game->minute, game->month, game->day, game->year);
+        char itm_buf[40];
+        if (ch->items[i])
+        {
+            sprintf(itm_buf, "%s ", key_item_table[i].name);
+            strcat(buf, itm_buf);
+        } 
     }
+    mvwprintw(win, 5, 2, "%s", buf);
 
     
 }
@@ -74,7 +87,7 @@ void add_exp(ACTOR * ch, int exp)
     check_exp(ch);    
 }
 
-//See if the player is ready to level up, and advance them if so.
+///See if the player is ready to level up, and advance them if so.
 void check_exp(ACTOR * ch)
 {
     if (ch->exp >= ch->level * 1000)
@@ -88,7 +101,7 @@ void check_exp(ACTOR * ch)
     }
 }
 
-//Move an ACTOR (player or monster) around the map
+///Move an ACTOR (player or monster) around the map
 void move_char(ACTOR * ch, int x, int y)
 {
     if (!ch)
@@ -113,8 +126,8 @@ void move_char(ACTOR * ch, int x, int y)
     return;
 }
 
-//Checked after a player moves, and occasionally generates
-//a monster/monster party and initiates combat.
+///Checked after a player moves, and occasionally generates
+///a monster/monster party and initiates combat.
 void check_combat(ACTOR * ch)
 {    
     int chance = 0;
@@ -132,13 +145,13 @@ void check_combat(ACTOR * ch)
         
         for (i = 1; i <= num_mobs; i++)
         {
-            set_monster(mobs[i], ch, 1);        
+            set_monster(mobs[i-1], ch, 1);        
 
-            SEND(statuswin, 1, 2, "An angry %s appears!", mobs[i]->name);
-            wrefresh(statuswin);
-            game->state = GAME_COMBAT;
-            update_gui();
+            SEND(infowin, 2, 1, "An angry %s appears!", mobs[i-1]->name);                        
+            game->state = GAME_COMBAT;            
         }
     }
+    
+    update_gui();
     return;
 }

@@ -118,8 +118,8 @@
 #define MAP_WIDTH               1600
 #define MAP_HEIGHT              480
 
-#define SCREEN_W                100
-#define SCREEN_H                30
+#define MAP_W                100
+#define MAP_H                30
 
 
 #define VIEW_RANGE              5
@@ -131,6 +131,14 @@
 
 #define EQUATOR                 MAP_HEIGHT / 2
 
+//Directions
+#define NORTH                   0
+#define EAST                    1
+#define SOUTH                   2
+#define WEST                    3
+#define DOWN                    4
+#define UP                      5
+
 //Item defines
 
 //Item types (increment MAX_ITEM_TYPE if you add more)
@@ -139,6 +147,8 @@ enum items { WEAPON, ARMOR, SHIELD, RING, NECK, LIGHT };
 #define MAX_KEY_ITEMS           5
 #define MAX_ITEM_TYPE           5
 #define MAX_ITEMS               3
+#define MAX_INVENTORY           99
+
 
 //key items
 #define ITEM_BOAT               0       //can travel across shallows
@@ -208,8 +218,7 @@ struct monster_info
     char *          name;        
     short           max_hp;
     int             level;
-    int             min_dmg;
-    int             max_dmg;
+    int             attack;    
     int             defense;
 
 };
@@ -256,7 +265,9 @@ struct actor_info
     byte            level;
     int             exp;
 
-    ITEM *          inventory;
+    byte            last_dir;       //last direction they went.
+
+    ITEM *          inventory[MAX_INVENTORY];
     bool            items[MAX_KEY_ITEMS];          //key items
     short           stats[MAX_STATS];
     bool            explored[MAP_WIDTH][MAP_HEIGHT];
@@ -308,8 +319,8 @@ extern WINDOW * infowin;
 extern WINDOW * shopwin;
 extern WINDOW * combatwin;
 
-extern int screen_x;
-extern int screen_y;
+extern int SCREEN_W;
+extern int SCREEN_H;
 
 extern int SEED;
 

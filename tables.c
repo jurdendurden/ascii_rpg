@@ -23,92 +23,38 @@ const struct tile_info tile_table[MAX_TILE] =
 
 
 const struct monster_info monster_table[] =
-{
-    /*
-        char *          name;            
-        short           max_hp;
-        int             level;
-        int             min_dmg;
-        int             max_dmg;
-        int             defense;        
-    */
+{   
+    //If you add more, remember to increment MAX_MONSTERS (main.h)
 
-    {   //name                                  
-        "beholder",         
-        //hp    level   min att     max att     defense
-        40,     12,     8,          16,         5
-    },
-
-    {   //name                                  
-        "dragon",         
-        //hp    level   min att     max att     defense
-        240,    25,     20,         40,         15
-    },
-
-    {   //name                                  
-        "goblin",         
-        //hp    level   min att     max att     defense
-        8,      1,      1,          4,          0
-    },
-    
-    {   //name                                  
-        "ogre",         
-        //hp    level   min att     max att     defense
-        48,     8,      5,          12,         3
-    },
-
-    {   //name                                  
-        "orc",         
-        //hp    level   min att     max att     defense
-        12,     2,      2,          5,          1
-    },
-
-    {   //name                                  
-        "skeleton",         
-        //hp    level   min att     max att     defense
-        7,      1,      1,          4,          1
-    },
-
-    {   //name                                  
-        "warg",         
-        //hp    level   min att     max att     defense
-        16,     3,      2,          8,          1
-    }
+    //  name                hp      level   attack      defense
+    {   "beholder",         40,     12,     8,          5           },
+    {   "carrion crawler",  10,     1,      1,          1           },
+    {   "dragon",           240,    25,     20,         15          },
+    {   "gelatinous cube",  30,     9,      5,          0           },
+    {   "goblin",           8,      1,      1,          0           },    
+    {   "ogre",             48,     8,      5,          3           },
+    {   "orc",              12,     2,      2,          1           },
+    {   "rust monster",     27,     11,     4,          3           },
+    {   "skeleton",         7,      1,      1,          1           },
+    {   "warg",             16,     3,      2,          1           }
 };
 
 
 
 const struct key_item_info key_item_table[MAX_KEY_ITEMS] =
 {
-    {"boat"}, 
-    {"shovel"}, 
-    {"lantern"}, 
-    {"fishing pole"},
-    {"bomb"}
+    {   "boat"              }, 
+    {   "shovel"            }, 
+    {   "lantern"           }, 
+    {   "fishing pole"      },
+    {   "bomb"              }
 };
 
 const struct item_info item_table[MAX_ITEMS] = 
 {
-    /*
-        char *              name;        
-        byte                type;           
-        bool                unique;
-        short               value;            
-        short               stats[MAX_STATS]; 
-    */
+    //If you add more, remember to increment MAX_ITEMS (main.h)
 
-    /*
-        #define STAT_STR                0
-        #define STAT_INT                1
-        #define STAT_DEX                2
-        #define STAT_VIT                3
-        #define STAT_LUCK               4
-        #define STAT_DAMAGE             5
-        #define STAT_DEFENSE            6
-        #define STAT_MAG_DAM            7
-        #define STAT_MAG_DEF            8
-        #define STAT_HP                 9
-    */
+    //Weapons
 
     {
       //name                type                unique?             gold cost
@@ -130,4 +76,22 @@ const struct item_info item_table[MAX_ITEMS] =
       // st,iq,dx,vt,lk,dm,df,ma,md,hp
         { 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 }
     }
+
+
+    //Armor
+
+
+    //Potions
+
+
+    //Rings
+
+
+    //Shields
+
+
+    //Necklaces/Cloaks/Mantles
+
+
+    //Lights
 };

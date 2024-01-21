@@ -89,7 +89,7 @@ void mob_stats(WINDOW * win)
     }
 }
 
-
+///Return a count of the monsters spawned in the current party.
 int count_mobs()
 {
     int i = 0;

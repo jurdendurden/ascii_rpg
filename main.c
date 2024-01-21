@@ -29,6 +29,7 @@ void print_in_middle(WINDOW *win, int starty, int startx, int width, char *strin
 void update_time();
 void diagnostics(WINDOW * win);
 
+void initialize_gui();
 void update_gui();
 //
 
@@ -48,8 +49,8 @@ WINDOW * infowin;
 WINDOW * shopwin;
 WINDOW * combatwin;
 
-int screen_y;
-int screen_x;
+int SCREEN_W;
+int SCREEN_H;
 
 int SEED;
 
@@ -87,40 +88,16 @@ int main(int argc, char* argv[])
         
 
     ch->map = map;
+    ch->items[ITEM_BOAT] = true;
+    ch->items[ITEM_BOMB] = true;
+    ch->items[ITEM_BOAT] = true;
 
-    generate_perlin_noise_map(map);    
-    
+    //Generate map elevations, tiles, caves, rivers, etc.
+    generate_perlin_noise_map(map);        
     set_map(map);
     add_caves(map);
     add_rivers(map);
-    //fix_map(map);
-
-    //ncurses screen init
-    initscr();
-    noecho();
-    cbreak();   
-    curs_set(0);    
-  
-    start_color();
-    declare_colors();
-    
-    getmaxyx(stdscr, screen_y, screen_x);
-
-    //Set up each window with size/coords. 
-    //(Y, X, height, width) (ncurses does everything Y/X instead of X/Y)
-    statuswin = newwin(6, SCREEN_W / 2, screen_y - 6, 2);
-    diagwin = newwin(6, SCREEN_W / 2, screen_y - 6, SCREEN_W / 2 + 2);
-    mapwin = newwin(SCREEN_H, SCREEN_W, 2, 2);
-    combatwin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, 2, SCREEN_W + 3);
-    infowin = newwin(SCREEN_H / 2, screen_x - SCREEN_W - 4, SCREEN_H / 2 + 3, SCREEN_W + 3);
-           
-    //Window borders
-    box(statuswin, 0, 0);    
-    box(diagwin, 0, 0);
-    box(infowin, 0, 0);
-    box(combatwin, 0, 0);
-    //
-
+    //fix_map(map);    
 
     //Generate player starting spot in the world
     ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
@@ -135,6 +112,7 @@ int main(int argc, char* argv[])
     ch->level = 1;
 
     game->state = GAME_PLAYING;    
+    initialize_gui();
     refresh();    
     update_gui();
 
@@ -147,6 +125,7 @@ int main(int argc, char* argv[])
     while (game->state != GAME_EXIT)
     {   
         int c = wgetch(mapwin);
+        
         
         switch (game->state)
         {
@@ -238,7 +217,11 @@ int main(int argc, char* argv[])
                         }                    
                         update_gui();
                         break;
-                    //Interaction              
+                    //Interaction   
+                    case 'b':
+                    case 'B':
+                        //Use bomb to destroy a mountain.                        
+                        break;           
                     case 'd':
                     case 'D':                 
 
@@ -345,15 +328,46 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+///Initializes all windows gui components.
+void initialize_gui()
+{    
+    //Initialize terminal window
+    initscr();
+
+    //Don't show cursor
+    noecho();
+    
+    cbreak();   
+
+    //Set cursor to column 0
+    curs_set(0);    
+  
+    start_color();
+    declare_colors();
+    
+    //Find amount of rows/cols in the terminal
+    getmaxyx(stdscr, SCREEN_H, SCREEN_W);
+
+    //Set up each window with size/coords. 
+    //Ncurses does everything Y/X instead of X/Y
+
+    //window name       //height         //width                  //start Y          //start X
+    statuswin = newwin( 7,               MAP_W / 2,               SCREEN_H - 7,      2              );
+    diagwin =   newwin( 7,               MAP_W / 2,               SCREEN_H - 7,      MAP_W / 2 + 2  );
+    mapwin =    newwin( MAP_H,           MAP_W,                   4,                 2              );
+    combatwin = newwin( MAP_H / 2 + 3,   SCREEN_W - MAP_W - 4,    4,                 MAP_W + 3      );
+    infowin =   newwin( MAP_H / 2 + 3,   SCREEN_W - MAP_W - 4,    MAP_H / 2 + 8,     MAP_W + 3      );
+}
+
+
+///Updates windows accordingly and displays to screen.
 void update_gui()
 {
     //Draw borders
-    box(statuswin, 0, 0);    
-    box(diagwin, 0, 0);
-    box(infowin, 0, 0);
-    box(combatwin, 0, 0);
-
-
+    wborder(statuswin, '|', '|', '-', '-', '+', '+', '+', '+');
+    wborder(diagwin, '|', '|', '-', '-', '+', '+', '+', '+');
+    wborder(infowin, '|', '|', '-', '-', '+', '+', '+', '+');
+    wborder(combatwin, '|', '|', '-', '-', '+', '+', '+', '+');
 
     //Draw all gui elements
     print_map(mapwin, ch);                        
