@@ -193,7 +193,6 @@ typedef struct actor_info               ACTOR;
 typedef struct stat_info                STATS;
 typedef struct game_info                GAME;
 
-
 struct coords
 {
     int         x;
@@ -262,6 +261,8 @@ struct actor_info
     short           max_hp;
     short           perm_hp;        //max_hp before eq/spells/etc
     
+    int             gold;
+
     byte            level;
     int             exp;
 
@@ -279,8 +280,6 @@ struct actor_info
     
 };
 
-
-
 struct game_info
 {
     int             state;
@@ -293,6 +292,64 @@ struct game_info
     int             year;
 };
 
+
+struct str_app_type
+{
+    short to_hit;
+    short to_dam;
+    short carry;        //max lbs you can carry
+    short wield;        //max weight of a weapon you can weild with one hand
+};
+
+struct int_app_type
+{
+    int learn;
+    int max_lang;
+    int max_spells_per_level;
+};
+
+struct wis_app_type
+{    
+    short heal_adj;           // adjustment to healing spells
+    short mag_def;            // magical defense adjustment.
+};
+
+struct dex_app_type
+{
+    short defensive;    // AC add
+    short reaction_adj; // reactions in combat (init)
+    short tohit;        // adds to hit_roll
+    short attacks;      // number of attacks.
+    
+};
+
+struct con_app_type
+{
+    short hitp;
+    short shock;
+    short ress_shock;    
+};
+
+/*struct cha_app_type
+{
+    short max_charms;  // for just charms
+    short henchmen;    // for large scale stuff. (castles, kingdoms)
+    short loyalty_adj; // loytalty adjustment for henchmen.
+};*/
+
+struct luk_app_type
+{
+    int loot_rate;
+    int gambling_bonus;
+};
+
+
+extern const struct str_app_type str_app[];
+extern const struct int_app_type int_app[];
+extern const struct wis_app_type wis_app[];
+extern const struct dex_app_type dex_app[];
+extern const struct con_app_type con_app[];
+extern const struct luk_app_type luk_app[];
 
 //Tables
 extern const struct tile_info           tile_table[MAX_TILE];

@@ -54,7 +54,7 @@ void declare_colors(void)
 
   
   init_pair(CLR_ENEMY,  COLOR_RED, COLOR_BLACK); // player
-  init_pair(CLR_PLAYER, COLOR_WHITE, -1); // player    
+  init_pair(CLR_PLAYER, COLOR_CYAN, -1); // player    
 
 
   //For window bgs

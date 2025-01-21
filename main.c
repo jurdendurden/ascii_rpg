@@ -150,9 +150,10 @@ int main(int argc, char* argv[])
                     case 'f':
                     case 'F':
                         //flee from combat;
+                        mvwprintw(infowin, 1, 2, "You attempt to flee from combat...");
                         if (rnd_num(1,100) < 20)
                         {
-                            mvwprintw(infowin, 1, 2, "You flee from combat!");
+                            mvwprintw(infowin, 2, 2, "You flee from combat!");
                             wrefresh(infowin);                        
                             free_mobs();
                             wclear(combatwin);
@@ -161,7 +162,7 @@ int main(int argc, char* argv[])
                         }
                         else
                         {
-                            mvwprintw(infowin, 1, 2, "You couldn't escape!");
+                            mvwprintw(infowin, 2, 2, "You couldn't escape!");
                             wrefresh(infowin);                        
                             combat_turn = TURN_MONSTERS;
                         }
@@ -370,11 +371,11 @@ void update_gui()
     wborder(combatwin, '|', '|', '-', '-', '+', '+', '+', '+');
 
     //Draw all gui elements
-    print_map(mapwin, ch);                        
-    print_player(mapwin, ch);
+    print_map(mapwin, ch);                            
     stats(statuswin, ch);
     mob_stats(combatwin);
     diagnostics(diagwin); 
+    print_player(mapwin, ch);
 
     //Refresh each window
     wrefresh(mapwin);    

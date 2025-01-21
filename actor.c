@@ -28,7 +28,7 @@ ACTOR * new_actor(void)
     ch->level = 0;
 
     for (i = 0; i < MAX_STATS; i++)    
-        ch->stats[i] = rnd_num(5,10);
+        ch->stats[i] = rnd_num(8,18);
     
     
     coords->x = 0;
@@ -55,7 +55,7 @@ void stats(WINDOW * win, ACTOR * ch)
     mvwprintw(win, 1, 2, "HP: %d / %d   Level: %d   Exp: %d / %d", 
         ch->curr_hp, ch->max_hp, ch->level, ch->exp, ch->level * 1000);
 
-    mvwprintw(win, 2, 2, "Str:  %-d  Int:  %-d  Dex:  %-d  Vit:  %-d  Luk:  %-d",
+    mvwprintw(win, 2, 2, "Str: %-d  Int: %-d  Dex: %-d  Vit: %-d  Luk: %-d",
         ch->stats[STAT_STR], ch->stats[STAT_INT], ch->stats[STAT_DEX],
         ch->stats[STAT_VIT], ch->stats[STAT_LUCK]);
 
@@ -154,4 +154,14 @@ void check_combat(ACTOR * ch)
     
     update_gui();
     return;
+}
+
+
+int get_attack(ACTOR * ch)
+{
+    if (!ch)
+        return 0;
+
+    
+    return 1;
 }

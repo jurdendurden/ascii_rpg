@@ -84,6 +84,7 @@ void mob_stats(WINDOW * win)
         {
             mvwprintw(win, 1 + (3 * i), 2, "%s", monster_table[mobs[i]->index].name);
             mvwprintw(win, 2 + (3 * i), 2, "HP: %d / %d   Level: %d", mobs[i]->curr_hp, mobs[i]->max_hp, mobs[i]->level);
+            mvwprintw(win, 16, 2, "(A)ttack (I)tem (F)lee");
             wrefresh(win);
         }
     }
