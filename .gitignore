@@ -42,6 +42,7 @@ rpg
 *.su
 *.idb
 *.pdb
+aux.info
 
 # Kernel Module Compile Results
 *.mod*
