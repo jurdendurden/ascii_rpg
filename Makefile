@@ -31,3 +31,6 @@ SRC := $(wildcard *.c)
 
 main:
 	gcc $(SRC) -o rpg $(GCC_FLAGS)
+
+clean:
+	$(RM) -f rpg *.o *~ *.bak *.orig *.rej aux.info

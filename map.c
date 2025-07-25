@@ -1,10 +1,24 @@
+/**
+ * World Map Generation and Management System
+ * 
+ * This file handles the creation and management of the game world including:
+ * - Procedural terrain generation using Perlin noise
+ * - Biome classification based on elevation and latitude
+ * - Cave system placement
+ * - River network generation
+ * - Terrain feature validation and adjacency checking
+ * 
+ * The world is generated in multiple passes to create realistic and
+ * interesting terrain formations with proper biome transitions.
+ */
+
 #include "main.h"
 #include <stdlib.h>
 
-//External function declarations
+//External function declarations (defined in other files)
 void update_gui();    
 
-//Local function declarations
+//Local function declarations (defined in this file)
 bool water_near(MAP * map, int x, int y, int range);
 bool cave_near(MAP * map, int x, int y, int range);
 bool mountain_near(MAP * map, int x, int y, int range);
@@ -13,52 +27,88 @@ void add_rivers(MAP * map);
 void add_river(MAP * map, int start_x, int start_y);
 COORDS * find_mountain(MAP * map, int x, int y);
 
-//Initialize a new map in memory.
+/**
+ * Creates and initializes a new game world map.
+ * Allocates memory and initializes all tiles to default values.
+ * 
+ * The map uses a 2D grid system where each tile contains terrain type,
+ * elevation data, display symbols, and color information.
+ * 
+ * @param width Width of the map in tiles
+ * @param height Height of the map in tiles
+ * @return Pointer to newly allocated and initialized MAP structure
+ */
 MAP * new_map(int width, int height)
 {
     MAP * map;
     int x = 0;
     int y = 0;    
 
+    // Allocate memory for the map structure
     map = (MAP *)malloc(sizeof (*map));
 
+    // Set map dimensions
     map->width = width;
     map->height = height;
 
+    // Initialize all map tiles to default values
     for (x = 0; x < width; x++)            
     {
         for (y = 0; y < height; y++)        
         {
-            map->tiles[x][y] = 0;
-            map->elevation[x][y] = 0;
-            map->tcolor[x][y] = 0;
-            map->tsymbols[x][y] = "";
+            map->tiles[x][y] = 0;           // No terrain type initially
+            map->elevation[x][y] = 0;       // Sea level elevation
+            map->tcolor[x][y] = 0;          // Default color
+            map->tsymbols[x][y] = "";       // Empty display symbol
         }
-
     }
 
     return map;
 }
 
-
+/**
+ * Determines the appropriate terrain type based on elevation value and world position.
+ * 
+ * This function implements the core biome classification system using elevation
+ * thresholds and latitude-based climate zones. Higher elevations become mountains
+ * and hills, while lower areas become forests, fields, or water bodies.
+ * 
+ * Climate zones:
+ * - Arctic regions (far north/south): Frozen terrain variants
+ * - Equatorial regions: Tropical forests and jungles  
+ * - Temperate regions: Standard forests and grasslands
+ * 
+ * @param value Elevation value from Perlin noise (typically -1.0 to 1.0)
+ * @param x X-coordinate of the tile (used for climate calculations)
+ * @param y Y-coordinate of the tile (used for latitude-based climate)
+ * @return Integer terrain type constant (defined in main.h)
+ */
 int get_tile(double value, int x, int y)
 {
+    // HIGH ELEVATION TERRAIN (Mountains and Snow-Capped Peaks)
+    // Values above 0.73 become mountainous terrain
     if (value > 0.73)
     {
+        // Climate-based mountain type selection
+        // Far north/south regions get snow-covered mountains
         if (y < EQUATOR - 180 || y > EQUATOR + 180)
         {
             map->tiles[x][y] = TILE_SNOW_MTN;
+            // Randomly alternate between two snow mountain color variants
             map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_SNOW_MTN : CLR_SNOW_MTN2;        
         }
         else
         {
+            // Temperate regions get standard rocky mountains
             map->tiles[x][y] = TILE_MOUNTAIN;
             map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_MOUNTAIN : CLR_MOUNTAIN2;        
         }
-
     }
+    // MEDIUM-HIGH ELEVATION (Hills and Elevated Forests)
+    // Values 0.65-0.73 become hills or elevated forest areas
     else if (value > 0.65) 
     {
+        // 80% chance for hills, 20% chance for forest (adds terrain variety)
         if (/*!mountain_near(map, x, y, 2)*/ rnd_num(1,100) < 80)
         {
             map->tiles[x][y] = TILE_HILL;
@@ -66,36 +116,48 @@ int get_tile(double value, int x, int y)
         }
         else
         {
+            // Climate-based forest selection for elevated areas
             if (y < EQUATOR - 180 || y > EQUATOR + 180)
             {
+                // Arctic regions: Frozen forests
                 map->tiles[x][y] = TILE_FWOODS;
                 map->tcolor[x][y] = CLR_FWOODS;        
             }
             else
             {
+                // Temperate regions: Standard forests with color variation
                 map->tiles[x][y] = TILE_FOREST;
                 map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_FOREST : CLR_FOREST2;        
             }
         }
     }
+    // MEDIUM ELEVATION (Primary Forest Zones)
+    // Values 0.54-0.65 form the main forest biomes
     else if (value > 0.54) 
     {
+        // Climate-based forest type assignment
         if (y < EQUATOR - 180 || y > EQUATOR + 180)
         {
+            // Arctic/Subarctic regions: Frozen woods (taiga-like)
             map->tiles[x][y] = TILE_FWOODS;
             map->tcolor[x][y] = CLR_FWOODS;        
         }
         else if (y < EQUATOR + 30 && y > EQUATOR - 30)
         {
+            // Equatorial belt: Dense tropical woods
             map->tiles[x][y] = TILE_WOODS;
             map->tcolor[x][y] = CLR_WOODS; 
         }
         else
         {
+            // Temperate zones: Standard deciduous forests
             map->tiles[x][y] = TILE_FOREST;
             map->tcolor[x][y] = rnd_num(1,100) < 50 ? CLR_FOREST : CLR_FOREST2;        
         }
     }
+    
+    // Additional terrain types would continue here...
+    // (Commented out section suggests more elevation bands were planned)
     /*else if (value > 0.44)
     {
         map->tiles[x][y] = TILE_SWAMP;

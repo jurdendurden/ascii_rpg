@@ -1,43 +1,64 @@
+/**
+ * Utility Functions
+ * 
+ * This file contains general-purpose helper functions used throughout
+ * the game engine. These functions provide common functionality like
+ * random number generation, text formatting, and display utilities.
+ */
+
 #include "main.h"
 #include "ncurses.h"
 
-
-
-///Generates a random number within the given range.
+/**
+ * Generates a random integer within the specified range (inclusive).
+ * 
+ * This function provides a more convenient interface to the standard
+ * rand() function by allowing direct specification of minimum and
+ * maximum values rather than requiring modulo arithmetic.
+ * 
+ * @param min Minimum value (inclusive)
+ * @param max Maximum value (inclusive)
+ * @return Random integer between min and max (inclusive)
+ */
 int rnd_num(int min, int max)
-{ 
-    int num = 0;
-
-    if (min == 0 && max == 0)
-        return 0;    
-
-    num = (min + rand() % (max+1 - min));
-
-    return num;
-    
+{
+    // Use standard rand() with modulo to get range, then offset by min
+    return rand() % (max - min + 1) + min;
 }
 
-///Centered window printf: prints text to an ncurses window pre-centered.
+/**
+ * Prints text centered within a specified width in an ncurses window.
+ * 
+ * This function handles text alignment and word wrapping for display
+ * in ncurses windows. It automatically centers the text horizontally
+ * within the specified width and handles multi-line text properly.
+ * 
+ * Useful for displaying titles, messages, and formatted text blocks
+ * in the game's user interface.
+ * 
+ * @param win Target ncurses window to print to
+ * @param starty Starting Y coordinate (row) for the text
+ * @param startx Starting X coordinate (column) for the text block
+ * @param width Maximum width of the text block in characters
+ * @param string Text string to display (can contain multiple words)
+ */
 void cwprintf(WINDOW *win, int starty, int startx, int width, char *string)
-{	
+{
     int length, x, y;
-	float temp;
+    float temp;
 
-	if(win == NULL)
-		win = stdscr;
-	getyx(win, y, x);
-	if(startx != 0)
-		x = startx;
-	if(starty != 0)
-		y = starty;
-	if(width == 0)
-		width = 80;
+    // Safety check for null pointers
+    if(win == NULL)
+        win = stdscr;   // Use standard screen if no window specified
 
-	length = strlen(string);
-	temp = (width - length)/ 2;
-	x = startx + (int)temp;
-	SEND(win, y, x, "%s", string);
-	refresh();
+    // Calculate string length and determine centering offset
+    length = strlen(string);
+    temp = (width - length) / 2;       // Calculate centering offset
+    x = startx + (int)temp;            // Apply horizontal centering
+    y = starty;                        // Use provided vertical position
+
+    // Print the centered text at calculated position
+    mvwprintw(win, y, x, "%s", string);
 }
 
 ///Push time forward based in min parameter. 

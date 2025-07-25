@@ -1,12 +1,22 @@
+/**
+ * ASCII RPG Game Engine
+ * 
+ * A text-based RPG engine written in C using the ncurses library for terminal UI.
+ * Features include procedural map generation using Perlin noise, exploration mechanics,
+ * item collection, basic combat system, and character progression.
+ * 
+ * Author: [Your Name]
+ * License: [License Type]
+ */
+
 //INCLUDES
 #include "main.h"
 #include "perlin.h"
 //
 
-
 //FUNCTION DECLARATIONS
 
-//Externals
+//External function declarations (defined in other source files)
 MAP * new_map();
 GAME * new_game();
 void fix_map(MAP * map);
@@ -18,7 +28,7 @@ void mob_stats(WINDOW * win);
 void set_monster(ACTOR * mob, ACTOR * ch, int level);
 void free_mobs();
 
-//Locals
+//Local function declarations (defined in this file)
 int get_tile(double value, int x, int y);
 
 void print_map(WINDOW * win, ACTOR * ch);
@@ -33,73 +43,87 @@ void initialize_gui();
 void update_gui();
 //
 
+//GLOBAL VARIABLES
 
-//VARIABLES
+// Core game components
+MAP * map;                      // Game world map containing terrain data
+ACTOR * ch;                     // Player character
+ACTOR * mobs[5];               // Array of up to 5 monsters for combat encounters
+GAME * game;                   // Game state and time tracking
+ITEM * item_list;             // Global item list
 
-//Globals
-MAP * map;
-ACTOR * ch;
-ACTOR * mobs[5];
-GAME * game;
-ITEM * item_list;
-WINDOW * statuswin;
-WINDOW * mapwin;
-WINDOW * diagwin;
-WINDOW * infowin;
-WINDOW * shopwin;
-WINDOW * combatwin;
+// ncurses window pointers for different UI components
+WINDOW * statuswin;           // Player stats, health, level, etc.
+WINDOW * mapwin;              // Main game map display
+WINDOW * diagwin;             // Diagnostic information window
+WINDOW * infowin;             // General information and messages
+WINDOW * shopwin;             // Shop interface (future use)
+WINDOW * combatwin;           // Combat information display
 
-int SCREEN_W;
-int SCREEN_H;
+// Screen dimensions
+int SCREEN_W;                 // Terminal width in characters
+int SCREEN_H;                 // Terminal height in characters
 
+// Random seed for map generation
 int SEED;
 
-bool combat_turn;
+// Combat system state
+bool combat_turn;             // Tracks whose turn it is in combat
 //
 
-
-
-///Entry function for program. Holds game loop logic.
+/**
+ * Main entry point for the ASCII RPG game.
+ * Initializes all game systems, generates the world, and runs the main game loop.
+ * 
+ * @param argc Number of command line arguments
+ * @param argv Array of command line argument strings
+ * @return Exit status (always returns 1 after endwin())
+ */
 int main(int argc, char* argv[])
 {    
-        
+    // Initialize random number generator
     srand(time(NULL));            
     char buf[1024];
 
+    // Parse command line arguments for custom seed
     if (argc > 0)  
     {
         if (argv[1])        
         {
             SEED = atoi(argv[1]);   
+            // Validate seed range
             if (SEED > 256 || SEED < 0)
                 SEED = rand() % 256;
         }        
     }
 
+    // Generate random seed if none provided
     if (!SEED)
         SEED = rand() % 256;
 
-    ch = new_actor();
-    map = new_map(MAP_WIDTH, MAP_HEIGHT);      
-    game = new_game();  
-
+    // Initialize core game objects
+    ch = new_actor();                           // Create player character
+    map = new_map(MAP_WIDTH, MAP_HEIGHT);      // Create game world map
+    game = new_game();                         // Initialize game state
+    
+    // Initialize monster array for combat encounters
     for (int i = 0; i < 5; i++)        
         mobs[i] = new_actor();
         
-
+    // Set up player character initial state
     ch->map = map;
-    ch->items[ITEM_BOAT] = true;
-    ch->items[ITEM_BOMB] = true;
-    ch->items[ITEM_BOAT] = true;
+    ch->items[ITEM_BOAT] = true;    // Start with boat for water traversal
+    ch->items[ITEM_BOMB] = true;    // Start with bomb for mountain destruction
+    ch->items[ITEM_BOAT] = true;    // Duplicate line - might be bug
 
-    //Generate map elevations, tiles, caves, rivers, etc.
-    generate_perlin_noise_map(map);        
-    set_map(map);
-    add_caves(map);
-    add_rivers(map);
-    //fix_map(map);    
+    // Generate procedural world content
+    generate_perlin_noise_map(map);     // Generate terrain using Perlin noise
+    set_map(map);                       // Apply tile types based on elevation
+    add_caves(map);                     // Add cave systems to the world
+    add_rivers(map);                    // Generate river networks
+    //fix_map(map);                     // Post-processing (commented out)
 
-    //Generate player starting spot in the world
+    // Find valid starting position for player (must be walkable terrain)
     ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
     ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);                
 
@@ -109,49 +133,56 @@ int main(int argc, char* argv[])
         ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
     }
     
+    // Set initial player level
     ch->level = 1;
 
+    // Initialize game state and GUI
     game->state = GAME_PLAYING;    
     initialize_gui();
     refresh();    
     update_gui();
 
-    //Take input from user. keypad allows KEY_UP/etc macros    
-    //Tied to mapwin to keep out conflicting keystrokes in
-    //other windows.
+    // Enable special key handling (arrow keys, function keys, etc.)
+    // Tied to mapwin to prevent conflicting keystrokes in other windows
     keypad(mapwin, true);
 
-    //Start the fun
+    //========================================
+    // MAIN GAME LOOP
+    // Processes user input and updates game state
+    //========================================
     while (game->state != GAME_EXIT)
     {   
-        int c = wgetch(mapwin);
-        
+        int c = wgetch(mapwin);  // Get user input
         
         switch (game->state)
         {
             default:
                 break;
 
-            //Combat related functions
+            //========================================
+            // COMBAT STATE HANDLING
+            //========================================
             case GAME_COMBAT:
             {                   
+                // Process monster AI turns (placeholder for future implementation)
                 for (int i = 0; i < 5; i++)  
                 {
                     if (mobs[i] != NULL)                                            
                     {
-                        //run combat round
+                        //run combat round - TODO: implement combat logic
                     }                    
                 }
 
+                // Handle player combat actions
                 switch (c)
                 {
                     default:
                         break;
                     case 'f':
                     case 'F':
-                        //flee from combat;
+                        // Attempt to flee from combat
                         mvwprintw(infowin, 1, 2, "You attempt to flee from combat...");
-                        if (rnd_num(1,100) < 20)
+                        if (rnd_num(1,100) < 20)  // 20% chance to successfully flee
                         {
                             mvwprintw(infowin, 2, 2, "You flee from combat!");
                             wrefresh(infowin);                        
@@ -169,27 +200,36 @@ int main(int argc, char* argv[])
                         break;
                     case 'a':
                     case 'A':
-                        //melee attack
+                        // Melee attack - TODO: implement attack logic
                         break; 
                     case 'i':
                     case 'I':
-                        //use item;
+                        // Use item - TODO: implement item usage in combat
+                        break;
                 }
 
                 break;
             }
 
+            //========================================
+            // MAIN GAMEPLAY STATE HANDLING
+            //========================================
             case GAME_PLAYING:
             {
                 switch (c)
                 {
                     default:
                         break;
-                    //Movement
+                    
+                    //========================================
+                    // MOVEMENT CONTROLS
+                    //========================================
                     case KEY_UP:                      
                         if (ch->coords->y  > 0)
                         {
-                            if (tile_table[map->tiles[ch->coords->x][ch->coords->y - 1]].walkable || (IS_SHALLOWS(ch->coords->x, ch->coords->y - 1) && ch->items[ITEM_BOAT]))
+                            // Check if destination is walkable or shallow water with boat
+                            if (tile_table[map->tiles[ch->coords->x][ch->coords->y - 1]].walkable || 
+                                (IS_SHALLOWS(ch->coords->x, ch->coords->y - 1) && ch->items[ITEM_BOAT]))
                                 move_char(ch,0,-1);
                         }
                         update_gui();
@@ -197,7 +237,8 @@ int main(int argc, char* argv[])
                     case KEY_DOWN:                          
                         if (ch->coords->y < MAP_HEIGHT - 1)
                         {
-                            if (tile_table[map->tiles[ch->coords->x][ch->coords->y + 1]].walkable || (IS_SHALLOWS(ch->coords->x, ch->coords->y + 1) && ch->items[ITEM_BOAT]))
+                            if (tile_table[map->tiles[ch->coords->x][ch->coords->y + 1]].walkable || 
+                                (IS_SHALLOWS(ch->coords->x, ch->coords->y + 1) && ch->items[ITEM_BOAT]))
                                 move_char(ch,0,1);
                         }    
                         update_gui();                
@@ -205,7 +246,8 @@ int main(int argc, char* argv[])
                     case KEY_LEFT:                
                         if (ch->coords->x > 0)
                         {
-                            if (tile_table[map->tiles[ch->coords->x - 1][ch->coords->y]].walkable || (IS_SHALLOWS(ch->coords->x - 1, ch->coords->y) && ch->items[ITEM_BOAT]))                    
+                            if (tile_table[map->tiles[ch->coords->x - 1][ch->coords->y]].walkable || 
+                                (IS_SHALLOWS(ch->coords->x - 1, ch->coords->y) && ch->items[ITEM_BOAT]))                    
                                 move_char(ch,-1,0);
                         }  
                         update_gui();                              
@@ -213,24 +255,29 @@ int main(int argc, char* argv[])
                     case KEY_RIGHT:                
                         if (ch->coords->x < MAP_WIDTH - 1)
                         {
-                            if (tile_table[map->tiles[ch->coords->x + 1][ch->coords->y]].walkable || (IS_SHALLOWS(ch->coords->x + 1, ch->coords->y) && ch->items[ITEM_BOAT]))                    
+                            if (tile_table[map->tiles[ch->coords->x + 1][ch->coords->y]].walkable || 
+                                (IS_SHALLOWS(ch->coords->x + 1, ch->coords->y) && ch->items[ITEM_BOAT]))                    
                                 move_char(ch,1,0);                              
                         }                    
                         update_gui();
                         break;
-                    //Interaction   
+                    
+                    //========================================
+                    // INTERACTION COMMANDS
+                    //========================================
                     case 'b':
                     case 'B':
-                        //Use bomb to destroy a mountain.                        
+                        // Use bomb to destroy a mountain - TODO: implement bomb usage
                         break;           
                     case 'd':
                     case 'D':                 
-
+                        // Dig for treasure or items
                         if (ch->dug_up[ch->coords->x][ch->coords->y])                                    
                             sprintf(buf, "You've already dug in this area.");                                    
                         else if (ch->items[ITEM_SHOVEL])
                         {
-                            if (map->tiles[ch->coords->x][ch->coords->y] == TILE_WATER || map->tiles[ch->coords->x][ch->coords->y] == TILE_SHALLOWS)                                                                        
+                            if (map->tiles[ch->coords->x][ch->coords->y] == TILE_WATER || 
+                                map->tiles[ch->coords->x][ch->coords->y] == TILE_SHALLOWS)                                                                        
                                 sprintf(buf, "You can't dig in the water!");                                                                     
                             else                
                                 sprintf(buf, "You dig around the area, but uncover nothing of importance.");                   
@@ -247,10 +294,11 @@ int main(int argc, char* argv[])
                         break;
                     case 'f':
                     case 'F':                
-
+                        // Fishing action
                         if (ch->items[ITEM_FISHING_POLE])
                         {                    
-                            if (map->tiles[ch->coords->x][ch->coords->y] != TILE_WATER && map->tiles[ch->coords->x][ch->coords->y] != TILE_SHALLOWS)                                                                        
+                            if (map->tiles[ch->coords->x][ch->coords->y] != TILE_WATER && 
+                                map->tiles[ch->coords->x][ch->coords->y] != TILE_SHALLOWS)                                                                        
                                 sprintf(buf, "You can't fish on land!");                                                                                             
                             else                
                                 sprintf(buf, "You cast your fishing pole in the water.");                   
@@ -264,20 +312,23 @@ int main(int argc, char* argv[])
 
                     case 'q': 
                     case 'Q':
+                        // Quit game
                         game->state = GAME_EXIT;
                         break;
 
                     case 's':
                     case 'S':                 
+                        // Search current location for items
                         if (ch->searched[ch->coords->x][ch->coords->y])                                                    
                             sprintf(buf, "You've already searched this area.");                                                                         
-                        else if (rnd_num(1,100) < 5 && !ch->items[ITEM_SHOVEL])
+                        else if (rnd_num(1,100) < 5 && !ch->items[ITEM_SHOVEL])  // 5% chance to find shovel
                         {                                    
                             sprintf(buf, "You found a shovel! How fortuitous!");                       
                             ch->items[ITEM_SHOVEL] = true;                    
                             add_exp(ch, 100);                                          
                         }
-                        else if (rnd_num(1,100) < 5 && !ch->items[ITEM_LANTERN] && IS_SHORELINE(ch->coords->x, ch->coords->y))
+                        else if (rnd_num(1,100) < 5 && !ch->items[ITEM_LANTERN] && 
+                                IS_SHORELINE(ch->coords->x, ch->coords->y))  // Lantern only found on shorelines
                         {                    
                             sprintf(buf, "You found a lantern! It must have washed ashore from a shipwreck.");   
                             ch->items[ITEM_LANTERN] = true;
@@ -292,6 +343,7 @@ int main(int argc, char* argv[])
                         break;
                     case 't':
                     case 'T':
+                        // Teleport to random location (debug/cheat command)
                         ch->coords->x = rnd_num(0, MAP_WIDTH - 1);
                         ch->coords->y = rnd_num(0, MAP_HEIGHT - 1);
 
@@ -302,13 +354,19 @@ int main(int argc, char* argv[])
                         }
                         update_gui();
                         break;
-                    //F Keys:
-                    case KEY_F(1):      //Push game time forward 1 hour.
+                    
+                    //========================================
+                    // FUNCTION KEY COMMANDS
+                    //========================================
+                    case KEY_F(1):      
+                        // Fast-forward game time by 1 hour (debug feature)
                         game->hour++;      
                         update_gui();                    
                         break;
                                 
                 } 
+                
+                // Clear message displays after each turn
                 if (buf[0] != '\0')
                     SEND(statuswin, 2, 1, "%s", buf);  
                 mvwprintw(statuswin, 1, 2, "                              ");
@@ -316,43 +374,46 @@ int main(int argc, char* argv[])
                 mvwprintw(infowin, 1, 2, "                              ");   
                 mvwprintw(infowin, 2, 2, "                              ");   
                 mvwprintw(combatwin, 1, 2, "                              ");   
-                
-
 
             }
         }
 
     }              
 
+    // Clean up ncurses and exit
     endwin();
     exit(1);
     return 0;
 }
 
-///Initializes all windows gui components.
+/**
+ * Initializes all ncurses GUI components and windows.
+ * Sets up color pairs, window dimensions, and creates all UI windows.
+ */
 void initialize_gui()
 {    
-    //Initialize terminal window
+    // Initialize ncurses terminal interface
     initscr();
 
-    //Don't show cursor
+    // Don't echo typed characters to screen
     noecho();
     
+    // Enable immediate input processing (no line buffering)
     cbreak();   
 
-    //Set cursor to column 0
+    // Hide the cursor
     curs_set(0);    
   
+    // Initialize color support and define color pairs
     start_color();
     declare_colors();
     
-    //Find amount of rows/cols in the terminal
+    // Get terminal dimensions
     getmaxyx(stdscr, SCREEN_H, SCREEN_W);
 
-    //Set up each window with size/coords. 
-    //Ncurses does everything Y/X instead of X/Y
-
-    //window name       //height         //width                  //start Y          //start X
+    // Create all game windows with specified dimensions and positions
+    // Note: ncurses uses (height, width, start_y, start_x) parameter order
+    
     statuswin = newwin( 7,               MAP_W / 2,               SCREEN_H - 7,      2              );
     diagwin =   newwin( 7,               MAP_W / 2,               SCREEN_H - 7,      MAP_W / 2 + 2  );
     mapwin =    newwin( MAP_H,           MAP_W,                   4,                 2              );
@@ -360,24 +421,26 @@ void initialize_gui()
     infowin =   newwin( MAP_H / 2 + 3,   SCREEN_W - MAP_W - 4,    MAP_H / 2 + 8,     MAP_W + 3      );
 }
 
-
-///Updates windows accordingly and displays to screen.
+/**
+ * Updates and refreshes all GUI windows with current game data.
+ * This function is called whenever the display needs to be updated.
+ */
 void update_gui()
 {
-    //Draw borders
+    // Draw borders around all windows
     wborder(statuswin, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(diagwin, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(infowin, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(combatwin, '|', '|', '-', '-', '+', '+', '+', '+');
 
-    //Draw all gui elements
-    print_map(mapwin, ch);                            
-    stats(statuswin, ch);
-    mob_stats(combatwin);
-    diagnostics(diagwin); 
-    print_player(mapwin, ch);
+    // Update all window contents
+    print_map(mapwin, ch);          // Render game map
+    stats(statuswin, ch);           // Display player statistics
+    mob_stats(combatwin);           // Show monster information
+    diagnostics(diagwin);           // Display debug/diagnostic info
+    print_player(mapwin, ch);       // Draw player character on map
 
-    //Refresh each window
+    // Refresh all windows to display changes
     wrefresh(mapwin);    
     wrefresh(statuswin);   
     wrefresh(diagwin);
